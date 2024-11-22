@@ -1,0 +1,12 @@
+body {
+    margin: 0;
+    overflow: hidden; /* Ensures no scrollbars for the canvas */
+}
+
+canvas {
+    display: block;
+    position: absolute;
+    top: 0;
+    left: 0;
+}
+
