@@ -11,12 +11,9 @@ const blockSize = {x: 100, y: 150}
 const objectPresets = {
 	'wire': {
 		type: 0,
-		position: {
-			x: 0,
-			y: 0,
-		},
 		from: null,
 		to: null,
+		valIndex: 0,
 	},
 	'block': {
 		type: 1,
@@ -24,8 +21,8 @@ const objectPresets = {
 			x: 0,
 			y: 0,
 		},
-		input: [false],
-		output: [false],
+		input: [],
+		output: [],
 		label: null
 	},
 	'switch': {
@@ -41,12 +38,26 @@ const objectPresets = {
 const objectMap = new Map();
 
 function createObject(type, id, label) {
+	console.log(`Creating object of type ${type}`)
 	const obj = JSON.parse(JSON.stringify((objectPresets[type])))
-	obj.position.x = canvas.width / 2 + Math.floor(Math.random() * 40) - 20
-	obj.position.y = canvas.height / 2 + Math.floor(Math.random() * 40) - 20
+	if(obj.type > 0) {
+		obj.position.x = canvas.width / 2 + Math.floor(Math.random() * 40) - 20
+		obj.position.y = canvas.height / 2 + Math.floor(Math.random() * 40) - 20
+	}
 	obj.label = label
-	console.log(objectPresets[type])
 	objectMap.set(id, obj)
+}
+
+function connectWire(from, to) {
+	let id = Math.floor(Math.random() * 999999999999999)
+	createObject('wire', id);
+	objectMap.get(id).from = from
+	objectMap.get(id).to = to
+	objectMap.get(from).output.push(false)
+	objectMap.get(id).valIndex = objectMap.get(from).output.length - 1
+	
+	console.log(objectMap.get(id).valIndex) 
+	console.log(objectMap.get(from).output) 
 }
 
 canvas.width = window.innerWidth;
@@ -62,7 +73,7 @@ canvas.addEventListener('mousemove', (event) => {
 
 canvas.addEventListener('mousedown', (event) => {
 	for(let [key, obj] of objectMap) {
-		if(mouseX >= obj.position.x && mouseY >= obj.position.y && mouseX <= (obj.position.x + blockSize.x) && mouseY <= (obj.position.y + blockSize.y)) {
+		if(obj.type > 0 && mouseX >= obj.position.x && mouseY >= obj.position.y && mouseX <= (obj.position.x + blockSize.x) && mouseY <= (obj.position.y + blockSize.y)) {
 			draggedObjectID = key
 			draggedObjectMouseDiff.x = obj.position.x - mouseX
 			draggedObjectMouseDiff.y = obj.position.y - mouseY
@@ -85,6 +96,13 @@ window.addEventListener('keydown', (event) => {
 function drawObject(id) {
 	const obj = objectMap.get(id)
 	switch(obj.type) {
+	case 0:
+		ctx.strokeStyle = 'black'
+		ctx.beginPath()
+		ctx.moveTo(objectMap.get(obj.from).position.x + blockSize.x, objectMap.get(obj.from).position.y + blockSize.y / 2)
+		ctx.lineTo(objectMap.get(obj.to).position.x, objectMap.get(obj.to).position.y + blockSize.y / 2)
+		ctx.stroke()
+		break
 	case 1:	
 		ctx.fillStyle = 'white'
 		ctx.fillRect(obj.position.x, obj.position.y, 100, 150);
@@ -101,6 +119,8 @@ function drawObject(id) {
 
 createObject('block', 69, 'NAND');
 createObject('block', 79, 'XOR');
+connectWire(69, 79)
+connectWire(69, 79)
 
 function draw() {
 	if(draggedObjectID != null) {
