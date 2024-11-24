@@ -39,6 +39,18 @@ function XOR(input) {
 	return true;
 }
 
+function NAND(input) {
+	return !AND(input)
+}
+
+function NOR(input) {
+	return !OR(input)
+}
+
+const WIRE = 0
+const BLOCK = 1
+const SWITCH = 2
+
 // Object presets
 const objectPresets = {
 	'wire': {
@@ -92,18 +104,44 @@ function connectWire(from, to, objID=null) {
 	createObject('wire', id);
 	objectMap.get(id).from = from
 	objectMap.get(id).to = to
-	objectMap.get(from).output.push(false)
-	objectMap.get(id).valIndex = objectMap.get(from).output.length - 1
+	if(objectMap.get(from).type == BLOCK) {
+		objectMap.get(from).output.push(false)
+		objectMap.get(id).valIndex = objectMap.get(from).output.length - 1
+	}
 }
 
 function update(id) {
 	switch(objectMap.get(id).type) {
-	case 0:
-		objectMap.get(objectMap.get(id).to).input = objectMap.get(objectMap.get(id).from).output
-		break
-	case 1:
-		objectMap.get(id).output = objectMap.get(id).operation(objectMap.get(id).input)
-		break
+		case WIRE:
+			switch(objectMap.get(objectMap.get(id).from).type) {
+				case WIRE:
+					objectMap.get(id).powered = objectMap.get(objectMap.get(id).from).powered
+					break
+				case BLOCK:
+					objectMap.get(id).powered = objectMap.get(objectMap.get(id).from).output[objectMap.get(id).valIndex]
+					break
+				case SWITCH:
+					objectMap.get(id).powered = objectMap.get(objectMap.get(id).from).powered
+					break
+			}
+			objectMap.get(objectMap.get(id).to).input[objectMap.get(id).inIndex] |= objectMap.get(id).powered
+			break
+		case BLOCK:
+			//for(let i = 0; i < objectMap.get(id).input.length; i++) {
+			//	objectMap.get(id).input[i] = false
+			//}
+			//console.log(`${id}: ${objectmap.get(id).operation(objectmap.get(id).input)}`)
+			//console.log(`${id}: ${objectMap.get(id).input}`)
+			objectMap.get(id).output[0] = objectMap.get(id).operation(objectMap.get(id).input)
+			break
+	}
+}
+
+function updateAllOfType(type) {
+	for(let [key, obj] of objectMap) {
+		if(obj.type == type) {
+			update(key)
+		}
 	}
 }
 
@@ -116,16 +154,27 @@ canvas.addEventListener('mousemove', (event) => {
 });
 
 canvas.addEventListener('mousedown', (event) => {
-	for(let [key, obj] of objectMap) {
-		if(obj.type == 1 && mouseX >= obj.position.x && mouseY >= obj.position.y && mouseX <= (obj.position.x + blockSize.x) && mouseY <= (obj.position.y + blockSize.y)) {
-			draggedObjectID = key
-			draggedObjectMouseDiff.x = obj.position.x - mouseX
-			draggedObjectMouseDiff.y = obj.position.y - mouseY
-		} else if(obj.type == 2 && Math.sqrt(Math.pow(obj.position.x - mouseX, 2) + Math.pow(obj.position.y - mouseY, 2)) <= switchRadius) {
-			draggedObjectID = key
-			draggedObjectMouseDiff.x = obj.position.x - mouseX
-			draggedObjectMouseDiff.y = obj.position.y - mouseY
-		}
+	switch (event.button) {
+		case 0:
+			for(let [key, obj] of objectMap) {
+				if(obj.type == 1 && mouseX >= obj.position.x && mouseY >= obj.position.y && mouseX <= (obj.position.x + blockSize.x) && mouseY <= (obj.position.y + blockSize.y)) {
+					draggedObjectID = key
+					draggedObjectMouseDiff.x = obj.position.x - mouseX
+					draggedObjectMouseDiff.y = obj.position.y - mouseY
+				} else if(obj.type == 2 && Math.sqrt(Math.pow(obj.position.x - mouseX, 2) + Math.pow(obj.position.y - mouseY, 2)) <= switchRadius) {
+					draggedObjectID = key
+					draggedObjectMouseDiff.x = obj.position.x - mouseX
+					draggedObjectMouseDiff.y = obj.position.y - mouseY
+				}
+			}
+			break
+		case 2:
+			for(let [key, obj] of objectMap) {
+				if(obj.type == 2 && Math.sqrt(Math.pow(obj.position.x - mouseX, 2) + Math.pow(obj.position.y - mouseY, 2)) <= switchRadius) {
+					obj.powered = !obj.powered
+				}
+			}
+			break
 	}
 });
 
@@ -144,20 +193,38 @@ window.addEventListener('keydown', (event) => {
 	}
 });
 
+window.addEventListener('contextmenu', (event) => {
+	event.preventDefault() 
+});
+
 function drawObject(id) {
 	const obj = objectMap.get(id)
-	ctx.lineWidth = 2;
+	ctx.lineWidth = 3;
 	ctx.strokeStyle = 'black'
 	switch(obj.type) {
-	case 0:
+	case WIRE:
+		if(obj.powered)
+			ctx.strokeStyle = 'yellow'
 		ctx.beginPath()
-		let relY = (blockSize.y / objectMap.get(obj.from).output.length) * (obj.valIndex + 0.5)
-		ctx.moveTo(objectMap.get(obj.from).position.x + blockSize.x, objectMap.get(obj.from).position.y + relY/*blockSize.y / 2*/)
-		relY = (blockSize.y / objectMap.get(obj.to).input.length) * (obj.inIndex + 0.5)
-		ctx.lineTo(objectMap.get(obj.to).position.x, objectMap.get(obj.to).position.y + relY)
+		if(objectMap.get(obj.from).type == BLOCK) {
+			let dx = 20
+			let relY = (blockSize.y / objectMap.get(obj.from).output.length) * (obj.valIndex + 0.5)
+			ctx.moveTo(objectMap.get(obj.from).position.x + blockSize.x + dx, objectMap.get(obj.from).position.y + relY/*blockSize.y / 2*/)
+		} else if(objectMap.get(obj.from).type == WIRE) {
+			ctx.moveTo(objectMap.get(obj.from).position.x, objectMap.get(obj.from).position.y)
+		} else if(objectMap.get(obj.from).type == SWITCH) {
+			ctx.moveTo(objectMap.get(obj.from).position.x, objectMap.get(obj.from).position.y)
+		}
+		if(objectMap.get(obj.to).type == BLOCK) {
+			let dx = 20
+			let relY = (blockSize.y / objectMap.get(obj.to).input.length) * (obj.inIndex + 0.5)
+			ctx.lineTo(objectMap.get(obj.to).position.x - dx, objectMap.get(obj.to).position.y + relY)
+		} else if(objectMap.get(obj.to).type == WIRE) {
+			ctx.moveTo(objectMap.get(obj.to).position.x, objectMap.get(obj.to).position.y)
+		}
 		ctx.stroke()
 		break
-	case 1:	
+	case BLOCK:	
 		ctx.fillStyle = 'white'
 		ctx.fillRect(obj.position.x, obj.position.y, 100, 150);
 		if(id == draggedObjectID) {
@@ -170,10 +237,10 @@ function drawObject(id) {
 		ctx.rect(obj.position.x, obj.position.y, 100, 150);
 		ctx.stroke();
 		break
-	case 2:
+	case SWITCH:
 		ctx.beginPath();
 		ctx.arc(obj.position.x, obj.position.y, switchRadius, 0, 2 * Math.PI);
-		ctx.fillStyle = "white";
+		ctx.fillStyle = (obj.powered ? "yellow" : 'rgb(200, 200, 200)');
 		ctx.fill();
 		ctx.lineWidth = 2;
 		ctx.strokeStyle = "black";
@@ -183,7 +250,17 @@ function drawObject(id) {
 }
 
 createObject('block', 69, 'NAND');
-createObject('block', 79, 'XOR');
+objectMap.get(69).operation = NAND 
+createObject('block', 70, 'XOR');
+objectMap.get(70).operation = XOR
+objectMap.get(70).input.push(false)
+connectWire(69, 70, 4)
+connectWire(69, 70, 5)
+objectMap.get(5).inIndex = 1
+objectMap.get(4).valIndex = 0
+objectMap.get(5).valIndex = 0
+objectMap.get(69).output.pop()
+/*createObject('block', 79, 'XOR');
 connectWire(69, 79)
 connectWire(69, 79)
 connectWire(69, 79)
@@ -191,9 +268,18 @@ createObject('block', 420, 'NOT');
 objectMap.get(420).input.push(false)
 connectWire(69, 420, 15)
 objectMap.get(15).inIndex = 1
-connectWire(79, 420)
+connectWire(79, 420)*/
+createObject('switch', 2)
+createObject('switch', 3)
+connectWire(2, 69)
+objectMap.get(69).input.push(false)
+connectWire(3, 69, 23)
+objectMap.get(23).inIndex = 1
 
 function draw() {
+	updateAllOfType(WIRE)
+	updateAllOfType(BLOCK)
+
 	if(draggedObjectID != null) {
 		objectMap.get(draggedObjectID).position.x = mouseX + draggedObjectMouseDiff.x
 		objectMap.get(draggedObjectID).position.y = mouseY + draggedObjectMouseDiff.y
