@@ -277,9 +277,6 @@ connectWire(3, 69, 23)
 objectMap.get(23).inIndex = 1
 
 function draw() {
-	updateAllOfType(WIRE)
-	updateAllOfType(BLOCK)
-
 	if(draggedObjectID != null) {
 		objectMap.get(draggedObjectID).position.x = mouseX + draggedObjectMouseDiff.x
 		objectMap.get(draggedObjectID).position.y = mouseY + draggedObjectMouseDiff.y
@@ -289,7 +286,15 @@ function draw() {
 
 	for(let [key, obj] of objectMap) {
 		drawObject(key)
+		if(obj.type == BLOCK) {
+			for(let i = 0; i < obj.input.length; i++) {
+				obj.input[i] = false
+			}
+		}
 	}
+	
+	updateAllOfType(WIRE)
+	updateAllOfType(BLOCK)
 
 	requestAnimationFrame(draw);
 }
