@@ -129,11 +129,6 @@ function update(id) {
 			objectMap.get(objectMap.get(id).to).input[objectMap.get(id).inIndex] |= objectMap.get(id).powered
 			break
 		case BLOCK:
-			//for(let i = 0; i < objectMap.get(id).input.length; i++) {
-			//	objectMap.get(id).input[i] = false
-			//}
-			//console.log(`${id}: ${objectmap.get(id).operation(objectmap.get(id).input)}`)
-			//console.log(`${id}: ${objectMap.get(id).input}`)
 			objectMap.get(id).output[0] = objectMap.get(id).operation(objectMap.get(id).input)
 			break
 	}
@@ -220,10 +215,9 @@ function drawObject(id) {
 		} else if(objectMap.get(obj.from).type == WIRE) {
 			ctx.moveTo(objectMap.get(obj.from).position.x, objectMap.get(obj.from).position.y)
 		} else if(objectMap.get(obj.from).type == SWITCH) {
-			ctx.moveTo(objectMap.get(obj.from).position.x, objectMap.get(obj.from).position.y)
+			ctx.moveTo(objectMap.get(obj.from).position.x + switchRadius + studLen, objectMap.get(obj.from).position.y)
 		}
 		if(objectMap.get(obj.to).type == BLOCK) {
-			let studLen = 20
 			let relY = (blockSize.y / objectMap.get(obj.to).input.length) * (obj.inIndex + 0.5)
 			ctx.lineTo(objectMap.get(obj.to).position.x - studLen, objectMap.get(obj.to).position.y + relY)
 			leftStudPositions.push([objectMap.get(obj.to).position.x - studLen, objectMap.get(obj.to).position.y + relY])
@@ -231,21 +225,6 @@ function drawObject(id) {
 			ctx.moveTo(objectMap.get(obj.to).position.x, objectMap.get(obj.to).position.y)
 		}
 		ctx.stroke()
-
-		// Draw studs
-		/*ctx.beginPath()
-		for(let i = 0; i < leftStudPositions.length; i++) {
-			ctx.moveTo(leftStudPositions[i][0], leftStudPositions[i][1])
-			ctx.lineTo(leftStudPositions[i][0] + studLen, leftStudPositions[i][1])
-		}
-		ctx.stroke()
-		ctx.beginPath()
-		for(let i = 0; i < rightStudPositions.length; i++) {
-			ctx.moveTo(rightStudPositions[i][0], rightStudPositions[i][1])
-			ctx.lineTo(rightStudPositions[i][0] + studLen, rightStudPositions[i][1])
-		}
-		ctx.stroke()*/
-
 		break
 	case BLOCK:	
 		ctx.fillStyle = 'white'
@@ -285,6 +264,12 @@ function drawObject(id) {
 		ctx.lineWidth = 2;
 		ctx.strokeStyle = "black";
 		ctx.stroke();
+		
+		// Stud
+		ctx.beginPath()
+		ctx.moveTo(obj.position.x + switchRadius, obj.position.y)
+		ctx.lineTo(obj.position.x + studLen + switchRadius, obj.position.y)
+		ctx.stroke()
 		break
 	}
 }
