@@ -1,15 +1,17 @@
-const canvas = document.getElementById('myCanvas');
-const ctx = canvas.getContext('2d');
+const canvas = document.getElementById('myCanvas')
+const ctx = canvas.getContext('2d')
 
-canvas.width = window.innerWidth;
-canvas.height = window.innerHeight;
+canvas.width = window.innerWidth
+canvas.height = window.innerHeight
+
+const cellSize = 20 // Used for the background grid
 
 let mouseX = 0;
 let mouseY = 0;
 let draggedObjectID = null
 let draggedObjectMouseDiff = {x: 0, y: 0}
-const blockSize = {x: 100, y: 150}
-const switchRadius = 30
+const blockSize = {x: cellSize * 5, y: cellSize * 7}
+const switchRadius = cellSize
 
 function AND(input) {
 	let res = input[0]
@@ -201,14 +203,14 @@ function drawObject(id) {
 	const obj = objectMap.get(id)
 	ctx.lineWidth = 3;
 	ctx.strokeStyle = 'black'
+	const studLen = 20
 	switch(obj.type) {
 	case WIRE:
 		if(obj.powered)
 			ctx.strokeStyle = 'yellow'
 		leftStudPositions = []
 		rightStudPositions = []
-		const studLen = 20
-		
+
 		// Draw wires
 		ctx.beginPath()
 		if(objectMap.get(obj.from).type == BLOCK) {
@@ -231,7 +233,7 @@ function drawObject(id) {
 		ctx.stroke()
 
 		// Draw studs
-		ctx.beginPath()
+		/*ctx.beginPath()
 		for(let i = 0; i < leftStudPositions.length; i++) {
 			ctx.moveTo(leftStudPositions[i][0], leftStudPositions[i][1])
 			ctx.lineTo(leftStudPositions[i][0] + studLen, leftStudPositions[i][1])
@@ -242,12 +244,12 @@ function drawObject(id) {
 			ctx.moveTo(rightStudPositions[i][0], rightStudPositions[i][1])
 			ctx.lineTo(rightStudPositions[i][0] + studLen, rightStudPositions[i][1])
 		}
-		ctx.stroke()
+		ctx.stroke()*/
 
 		break
 	case BLOCK:	
 		ctx.fillStyle = 'white'
-		ctx.fillRect(obj.position.x, obj.position.y, 100, 150);
+		ctx.fillRect(obj.position.x, obj.position.y, blockSize.x, blockSize.y);
 		if(id == draggedObjectID) {
 			ctx.strokeStyle = 'rgb(200, 200, 200)'
 		}
@@ -255,8 +257,25 @@ function drawObject(id) {
 		ctx.font = "16px Arial";
 		ctx.fillText(obj.label, obj.position.x + 5, obj.position.y + 21);
 		ctx.beginPath();
-		ctx.rect(obj.position.x, obj.position.y, 100, 150);
-		ctx.stroke();
+		ctx.rect(obj.position.x, obj.position.y, blockSize.x, blockSize.y);
+		ctx.stroke()
+
+		// Right studs
+		for(let i = 0; i < obj.output.length; i++) {
+			ctx.beginPath()
+			let relY = (blockSize.y / obj.output.length) * (i + 0.5)
+			ctx.moveTo(obj.position.x + blockSize.x, obj.position.y + relY)
+			ctx.lineTo(obj.position.x + blockSize.x + studLen, obj.position.y + relY)
+			ctx.stroke()
+		}
+		// Left studs
+		for(let i = 0; i < obj.input.length; i++) {
+			ctx.beginPath()
+			let relY = (blockSize.y / obj.input.length) * (i + 0.5)
+			ctx.moveTo(obj.position.x, obj.position.y + relY)
+			ctx.lineTo(obj.position.x - studLen, obj.position.y + relY)
+			ctx.stroke()
+		}
 		break
 	case SWITCH:
 		ctx.beginPath();
@@ -273,13 +292,17 @@ function drawObject(id) {
 createObject('block', 69, 'NAND');
 objectMap.get(69).operation = NAND 
 createObject('block', 70, 'XOR');
+createObject('block', 71, 'XOR');
 objectMap.get(70).operation = XOR
+objectMap.get(71).operation = XOR
 objectMap.get(70).input.push(false)
 connectWire(69, 70, 4)
-connectWire(69, 70, 5)
-objectMap.get(5).inIndex = 1
+connectWire(69, 71,99)
+objectMap.get(99).valIndex = 0
+//connectWire(69, 70, 5)
+//objectMap.get(5).inIndex = 1
 objectMap.get(4).valIndex = 0
-objectMap.get(5).valIndex = 0
+//objectMap.get(5).valIndex = 0
 objectMap.get(69).output.pop()
 /*createObject('block', 79, 'XOR');
 connectWire(69, 79)
@@ -299,11 +322,27 @@ objectMap.get(23).inIndex = 1
 
 function draw() {
 	if(draggedObjectID != null) {
-		objectMap.get(draggedObjectID).position.x = mouseX + draggedObjectMouseDiff.x
-		objectMap.get(draggedObjectID).position.y = mouseY + draggedObjectMouseDiff.y
+		objectMap.get(draggedObjectID).position.x = (mouseX + draggedObjectMouseDiff.x) - ((mouseX + draggedObjectMouseDiff.x) % cellSize)
+		objectMap.get(draggedObjectID).position.y = (mouseY + draggedObjectMouseDiff.y) - ((mouseY + draggedObjectMouseDiff.y) % cellSize)
 	}
 
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.clearRect(0, 0, canvas.width, canvas.height)
+
+	// Background lines
+	ctx.strokeStyle = "rgb(240, 240, 240)"
+	ctx.lineWidth = 1
+	for(let i = 0; i <= canvas.width; i += cellSize) {
+		ctx.beginPath()
+		ctx.moveTo(i, 0)
+		ctx.lineTo(i, canvas.height)
+		ctx.stroke()
+	}
+	for(let i = 0; i <= canvas.height; i += cellSize) {
+		ctx.beginPath()
+		ctx.moveTo(0, i)
+		ctx.lineTo(canvas.width, i)
+		ctx.stroke()
+	}
 
 	for(let [key, obj] of objectMap) {
 		drawObject(key)
