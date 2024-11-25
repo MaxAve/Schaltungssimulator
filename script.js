@@ -273,6 +273,13 @@ window.addEventListener('contextmenu', (event) => {
  * GUI
 */
 
+function drawLine(x1, y1, x2, y2) {
+	ctx.beginPath()
+	ctx.moveTo(x1, y1)
+	ctx.lineTo(x2, y2)
+	ctx.stroke()
+}
+
 function drawObject(id) {
 	const obj = objectMap.get(id)
 	ctx.lineWidth = 3;
@@ -321,11 +328,12 @@ function drawObject(id) {
 		// Right studs
 		for(let i = 0; i < obj.output.length; i++) {
 			ctx.strokeStyle = (obj.output[i] ? 'yellow' : 'black')
-			ctx.beginPath()
 			let relY = (blockSize.y / obj.output.length) * (i + 0.5)
+			drawLine(obj.position.x + blockSize.x, obj.position.y + relY, obj.position.x + blockSize.x + studLen, obj.position.y + relY)
+			/*ctx.beginPath()
 			ctx.moveTo(obj.position.x + blockSize.x, obj.position.y + relY)
 			ctx.lineTo(obj.position.x + blockSize.x + studLen, obj.position.y + relY)
-			ctx.stroke()
+			ctx.stroke()*/
 		}
 		// Left studs
 		for(let i = 0; i < obj.input.length; i++) {
