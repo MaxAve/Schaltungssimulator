@@ -13,6 +13,10 @@ let draggedObjectMouseDiff = {x: 0, y: 0}
 const blockSize = {x: cellSize * 5, y: cellSize * 7}
 const switchRadius = cellSize
 
+/*
+ * Functions
+*/
+
 function AND(input) {
 	let res = input[0]
 	for(let i = 1; i < input.length; i++)
@@ -48,6 +52,10 @@ function NAND(input) {
 function NOR(input) {
 	return !OR(input)
 }
+
+/*
+ * Objects
+*/
 
 const WIRE = 0
 const BLOCK = 1
@@ -86,6 +94,10 @@ const objectPresets = {
 
 const objectMap = new Map();
 
+function genID() {
+	return Math.floor(Math.random() * 999999999999999)
+}
+
 function createObject(type, id, label) {
 	console.log(`Creating object of type ${type}`)
 	const obj = JSON.parse(JSON.stringify((objectPresets[type])))
@@ -107,7 +119,7 @@ function connectWire(from, to, objID=null) {
 	objectMap.get(id).from = from
 	objectMap.get(id).to = to
 	if(objectMap.get(from).type == BLOCK) {
-		objectMap.get(from).output.push(false)
+		//objectMap.get(from).output.push(false)
 		objectMap.get(id).valIndex = objectMap.get(from).output.length - 1
 	}
 }
@@ -142,8 +154,71 @@ function updateAllOfType(type) {
 	}
 }
 
-const rectWidth = 50;
-const rectHeight = 30;
+// Logic gates that are available in the menu
+const GateType = {
+	NOT:  1,
+	AND:  2,
+	OR:   3,
+	NAND: 4,
+	NOR:  5,
+	XOR:  6,
+}
+
+// Creates a new logic gate block object from a selected preset
+function addLogicGateBlock(type) {
+	let label = '???'
+	let inputs = 0
+	let outputs = 0
+	let operation = null
+	switch(type) {
+		case GateType.NOT:
+			label = 'NOT'
+			inputs = 2
+			outputs = 1
+			operation = NOT
+			break
+		case GateType.AND:
+			label = 'AND'
+			inputs = 2
+			outputs = 1
+			operation = AND
+			break
+		case GateType.OR:
+			label = 'OR'
+			inputs = 2
+			outputs = 1
+			operation = OR
+			break
+		case GateType.NAND:
+			label = 'NAND'
+			inputs = 2
+			outputs = 1
+			operation = NAND
+			break
+		case GateType.NOR:
+			label = 'NOR'
+			inputs = 2
+			outputs = 1
+			operation = NOR
+			break
+		case GateType.XOR:
+			label = 'XOR'
+			inputs = 2
+			outputs = 1
+			operation = XOR
+			break
+	}
+	const objectID = genID() 
+	createObject('block', objectID, label)
+	objectMap.get(objectID).operation = operation
+	objectMap.get(objectID).input = new Array(inputs).fill(false)
+	objectMap.get(objectID).output = new Array(outputs).fill(false)
+	return objectID
+}
+
+/*
+ * Event listeners
+*/
 
 canvas.addEventListener('mousemove', (event) => {
     mouseX = event.clientX;
@@ -194,6 +269,10 @@ window.addEventListener('contextmenu', (event) => {
 	event.preventDefault() 
 });
 
+/*
+ * GUI
+*/
+
 function drawObject(id) {
 	const obj = objectMap.get(id)
 	ctx.lineWidth = 3;
@@ -241,6 +320,7 @@ function drawObject(id) {
 
 		// Right studs
 		for(let i = 0; i < obj.output.length; i++) {
+			ctx.strokeStyle = (obj.output[i] ? 'yellow' : 'black')
 			ctx.beginPath()
 			let relY = (blockSize.y / obj.output.length) * (i + 0.5)
 			ctx.moveTo(obj.position.x + blockSize.x, obj.position.y + relY)
@@ -249,6 +329,7 @@ function drawObject(id) {
 		}
 		// Left studs
 		for(let i = 0; i < obj.input.length; i++) {
+			ctx.strokeStyle = (obj.input[i] ? 'yellow' : 'black')
 			ctx.beginPath()
 			let relY = (blockSize.y / obj.input.length) * (i + 0.5)
 			ctx.moveTo(obj.position.x, obj.position.y + relY)
@@ -266,6 +347,7 @@ function drawObject(id) {
 		ctx.stroke();
 		
 		// Stud
+		ctx.strokeStyle = (obj.powered ? 'yellow' : 'black')
 		ctx.beginPath()
 		ctx.moveTo(obj.position.x + switchRadius, obj.position.y)
 		ctx.lineTo(obj.position.x + studLen + switchRadius, obj.position.y)
@@ -274,21 +356,22 @@ function drawObject(id) {
 	}
 }
 
-createObject('block', 69, 'NAND');
-objectMap.get(69).operation = NAND 
+//createObject('block', 69, 'NAND');
+//objectMap.get(69).operation = NAND 
+const id69 = addLogicGateBlock(GateType.NAND)
 createObject('block', 70, 'XOR');
 createObject('block', 71, 'XOR');
 objectMap.get(70).operation = XOR
 objectMap.get(71).operation = XOR
 objectMap.get(70).input.push(false)
-connectWire(69, 70, 4)
-connectWire(69, 71,99)
+connectWire(id69, 70, 4)
+connectWire(id69, 71,99)
 objectMap.get(99).valIndex = 0
 //connectWire(69, 70, 5)
 //objectMap.get(5).inIndex = 1
 objectMap.get(4).valIndex = 0
 //objectMap.get(5).valIndex = 0
-objectMap.get(69).output.pop()
+objectMap.get(id69).output.pop()
 /*createObject('block', 79, 'XOR');
 connectWire(69, 79)
 connectWire(69, 79)
@@ -300,9 +383,8 @@ objectMap.get(15).inIndex = 1
 connectWire(79, 420)*/
 createObject('switch', 2)
 createObject('switch', 3)
-connectWire(2, 69)
-objectMap.get(69).input.push(false)
-connectWire(3, 69, 23)
+connectWire(2, id69)
+connectWire(3, id69, 23)
 objectMap.get(23).inIndex = 1
 
 function draw() {
