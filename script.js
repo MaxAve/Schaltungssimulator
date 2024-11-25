@@ -1,7 +1,7 @@
 const canvas = document.getElementById('myCanvas')
 const ctx = canvas.getContext('2d')
 
-canvas.width = window.innerWidth
+canvas.width = window.innerWidth - 200
 canvas.height = window.innerHeight
 
 const cellSize = 20 // Used for the background grid
@@ -269,6 +269,11 @@ window.addEventListener('contextmenu', (event) => {
 	event.preventDefault() 
 });
 
+window.addEventListener('resize', (event) => {
+	canvas.width = window.innerWidth - 200
+	canvas.height = window.innerHeight
+});
+
 /*
  * GUI
 */
@@ -280,9 +285,16 @@ function drawLine(x1, y1, x2, y2) {
 	ctx.stroke()
 }
 
+function drawWire(x1, y1, x2, y2) {
+	const half = (x2 - x1) / 2
+	drawLine(x1, y1, x1 + half, y1)
+	drawLine(x1 + half, y1, x1 + half, y2)
+	drawLine(x1 + half, y2, x2, y2)
+}
+
 function drawObject(id) {
 	const obj = objectMap.get(id)
-	ctx.lineWidth = 3;
+	ctx.lineWidth = 3
 	ctx.strokeStyle = 'black'
 	const studLen = 20
 	switch(obj.type) {
@@ -292,25 +304,36 @@ function drawObject(id) {
 		leftStudPositions = []
 		rightStudPositions = []
 
+		fromPos = null
+		toPos = null
+
 		// Draw wires
-		ctx.beginPath()
+		//ctx.beginPath()
 		if(objectMap.get(obj.from).type == BLOCK) {
 			let relY = (blockSize.y / objectMap.get(obj.from).output.length) * (obj.valIndex + 0.5)
-			ctx.moveTo(objectMap.get(obj.from).position.x + blockSize.x + studLen, objectMap.get(obj.from).position.y + relY/*blockSize.y / 2*/)
+			//ctx.moveTo(objectMap.get(obj.from).position.x + blockSize.x + studLen, objectMap.get(obj.from).position.y + relY/*blockSize.y / 2*/)
 			rightStudPositions.push([objectMap.get(obj.from).position.x + blockSize.x, objectMap.get(obj.from).position.y + relY])
+			fromPos = [objectMap.get(obj.from).position.x + blockSize.x + studLen, objectMap.get(obj.from).position.y + relY]
 		} else if(objectMap.get(obj.from).type == WIRE) {
-			ctx.moveTo(objectMap.get(obj.from).position.x, objectMap.get(obj.from).position.y)
+			//ctx.moveTo(objectMap.get(obj.from).position.x, objectMap.get(obj.from).position.y)
+			fromPos = [objectMap.get(obj.from).position.x, objectMap.get(obj.from).position.y]
 		} else if(objectMap.get(obj.from).type == SWITCH) {
-			ctx.moveTo(objectMap.get(obj.from).position.x + switchRadius + studLen, objectMap.get(obj.from).position.y)
+			//ctx.moveTo(objectMap.get(obj.from).position.x + switchRadius + studLen, objectMap.get(obj.from).position.y)
+			fromPos = [objectMap.get(obj.from).position.x + switchRadius + studLen, objectMap.get(obj.from).position.y]
 		}
 		if(objectMap.get(obj.to).type == BLOCK) {
 			let relY = (blockSize.y / objectMap.get(obj.to).input.length) * (obj.inIndex + 0.5)
-			ctx.lineTo(objectMap.get(obj.to).position.x - studLen, objectMap.get(obj.to).position.y + relY)
+			//ctx.lineTo(objectMap.get(obj.to).position.x - studLen, objectMap.get(obj.to).position.y + relY)
 			leftStudPositions.push([objectMap.get(obj.to).position.x - studLen, objectMap.get(obj.to).position.y + relY])
+			toPos = [objectMap.get(obj.to).position.x - studLen, objectMap.get(obj.to).position.y + relY]
 		} else if(objectMap.get(obj.to).type == WIRE) {
-			ctx.moveTo(objectMap.get(obj.to).position.x, objectMap.get(obj.to).position.y)
+			//ctx.moveTo(objectMap.get(obj.to).position.x, objectMap.get(obj.to).position.y)
+			toPos = [objectMap.get(obj.to).position.x, objectMap.get(obj.to).position.y]
 		}
-		ctx.stroke()
+
+		drawLine(fromPos[0], fromPos[1], toPos[0], toPos[1])
+
+		//ctx.stroke()
 		break
 	case BLOCK:	
 		ctx.fillStyle = 'white'
@@ -350,7 +373,6 @@ function drawObject(id) {
 		ctx.arc(obj.position.x, obj.position.y, switchRadius, 0, 2 * Math.PI);
 		ctx.fillStyle = (obj.powered ? "yellow" : 'rgb(200, 200, 200)');
 		ctx.fill();
-		ctx.lineWidth = 2;
 		ctx.strokeStyle = "black";
 		ctx.stroke();
 		
@@ -430,6 +452,10 @@ function draw() {
 	
 	updateAllOfType(WIRE)
 	updateAllOfType(BLOCK)
+
+	ctx.strokeStyle = 'black'
+	ctx.lineWidth = 1
+	drawLine(canvas.width, 0, canvas.width, canvas.height)
 
 	requestAnimationFrame(draw);
 }
