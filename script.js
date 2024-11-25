@@ -205,24 +205,45 @@ function drawObject(id) {
 	case WIRE:
 		if(obj.powered)
 			ctx.strokeStyle = 'yellow'
+		leftStudPositions = []
+		rightStudPositions = []
+		const studLen = 20
+		
+		// Draw wires
 		ctx.beginPath()
 		if(objectMap.get(obj.from).type == BLOCK) {
-			let dx = 20
 			let relY = (blockSize.y / objectMap.get(obj.from).output.length) * (obj.valIndex + 0.5)
-			ctx.moveTo(objectMap.get(obj.from).position.x + blockSize.x + dx, objectMap.get(obj.from).position.y + relY/*blockSize.y / 2*/)
+			ctx.moveTo(objectMap.get(obj.from).position.x + blockSize.x + studLen, objectMap.get(obj.from).position.y + relY/*blockSize.y / 2*/)
+			rightStudPositions.push([objectMap.get(obj.from).position.x + blockSize.x, objectMap.get(obj.from).position.y + relY])
 		} else if(objectMap.get(obj.from).type == WIRE) {
 			ctx.moveTo(objectMap.get(obj.from).position.x, objectMap.get(obj.from).position.y)
 		} else if(objectMap.get(obj.from).type == SWITCH) {
 			ctx.moveTo(objectMap.get(obj.from).position.x, objectMap.get(obj.from).position.y)
 		}
 		if(objectMap.get(obj.to).type == BLOCK) {
-			let dx = 20
+			let studLen = 20
 			let relY = (blockSize.y / objectMap.get(obj.to).input.length) * (obj.inIndex + 0.5)
-			ctx.lineTo(objectMap.get(obj.to).position.x - dx, objectMap.get(obj.to).position.y + relY)
+			ctx.lineTo(objectMap.get(obj.to).position.x - studLen, objectMap.get(obj.to).position.y + relY)
+			leftStudPositions.push([objectMap.get(obj.to).position.x - studLen, objectMap.get(obj.to).position.y + relY])
 		} else if(objectMap.get(obj.to).type == WIRE) {
 			ctx.moveTo(objectMap.get(obj.to).position.x, objectMap.get(obj.to).position.y)
 		}
 		ctx.stroke()
+
+		// Draw studs
+		ctx.beginPath()
+		for(let i = 0; i < leftStudPositions.length; i++) {
+			ctx.moveTo(leftStudPositions[i][0], leftStudPositions[i][1])
+			ctx.lineTo(leftStudPositions[i][0] + studLen, leftStudPositions[i][1])
+		}
+		ctx.stroke()
+		ctx.beginPath()
+		for(let i = 0; i < rightStudPositions.length; i++) {
+			ctx.moveTo(rightStudPositions[i][0], rightStudPositions[i][1])
+			ctx.lineTo(rightStudPositions[i][0] + studLen, rightStudPositions[i][1])
+		}
+		ctx.stroke()
+
 		break
 	case BLOCK:	
 		ctx.fillStyle = 'white'
