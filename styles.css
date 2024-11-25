@@ -1,12 +1,32 @@
+* {
+	margin: 0;
+	padding: 0;
+	box-sizing: border-box;
+}
+
 body {
-    margin: 0;
-    overflow: hidden; /* Ensures no scrollbars for the canvas */
+	display: flex;
+	height: 100vh;
+}
+
+#menu {
+	width: 200px; 
+	background-color: rgb(240, 240, 240);
+	color: #fff;
+	display: flex;
+	flex-direction: column; 
+	justify-content: flex-start;
+	align-items: center;
+	padding-top: 1rem;
+}
+
+#canvas-container {
+	width: auto;
+	height: 100%;
 }
 
 canvas {
-    display: block;
-    position: absolute;
-    top: 0;
-    left: 0;
+	width: 100%;
+	height: 100%;
+	display: block;
 }
-

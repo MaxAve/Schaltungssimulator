@@ -1,8 +1,11 @@
 const canvas = document.getElementById('myCanvas')
 const ctx = canvas.getContext('2d')
 
-canvas.width = window.innerWidth - 200
-canvas.height = window.innerHeight
+//canvas.width = window.innerWidth - 200
+//canvas.height = window.innerHeight
+
+canvas.width = canvas.parentElement.offsetWidth
+canvas.height = canvas.parentElement.offsetHeight
 
 const cellSize = 20 // Used for the background grid
 
@@ -452,10 +455,6 @@ function draw() {
 	
 	updateAllOfType(WIRE)
 	updateAllOfType(BLOCK)
-
-	ctx.strokeStyle = 'black'
-	ctx.lineWidth = 1
-	drawLine(canvas.width, 0, canvas.width, canvas.height)
 
 	requestAnimationFrame(draw);
 }
