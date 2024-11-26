@@ -1,11 +1,10 @@
 const canvas = document.getElementById('myCanvas')
 const ctx = canvas.getContext('2d')
 
-//canvas.width = window.innerWidth - 200
-//canvas.height = window.innerHeight
-
 canvas.width = canvas.parentElement.offsetWidth
 canvas.height = canvas.parentElement.offsetHeight
+
+let sketchName = 'Unbenannte Skizze'
 
 const cellSize = 20 // Used for the background grid
 
@@ -13,8 +12,17 @@ let mouseX = 0;
 let mouseY = 0;
 let draggedObjectID = null
 let draggedObjectMouseDiff = {x: 0, y: 0}
+
+let downloadButton = document.querySelector("#download-button")
+let renameButton = document.querySelector("#rename-button")
+
 const blockSize = {x: cellSize * 5, y: cellSize * 7}
 const switchRadius = cellSize
+
+const sketchOffset = {x: 0, y: 0}
+const preDragMousePos = {x: 0, y: 0}
+const dragDiff = {x: 0, y: 0}
+let draggingSketch = false
 
 /*
  * Functions
@@ -219,6 +227,16 @@ function addLogicGateBlock(type) {
 	return objectID
 }
 
+// Saves the entire sketch as a JSON string
+function save() {
+	objectMapObj = {}
+	for(let [id, obj] of objectMap) {
+		objectMapObj[id] = obj
+	}
+	//print(objectMapObj)
+	return JSON.stringify(objectMapObj)
+}
+
 /*
  * Event listeners
 */
@@ -226,21 +244,45 @@ function addLogicGateBlock(type) {
 canvas.addEventListener('mousemove', (event) => {
     mouseX = event.clientX;
     mouseY = event.clientY;
+
+	if(draggingSketch) {
+		dragDiff.x = preDragMousePos.x - mouseX	
+		dragDiff.y = preDragMousePos.y - mouseY
+		sketchOffset.x -= dragDiff.x
+		sketchOffset.y -= dragDiff.y
+		dragDiff.x = 0
+		dragDiff.y = 0
+		preDragMousePos.x = mouseX
+		preDragMousePos.y = mouseY
+		console.log(`${sketchOffset.x}, ${sketchOffset.y}`)
+	}
 });
+
+/*
+TODO account for sketch offsets
+*/
 
 canvas.addEventListener('mousedown', (event) => {
 	switch (event.button) {
 		case 0:
+			draggingObject = false
 			for(let [key, obj] of objectMap) {
 				if(obj.type == 1 && mouseX >= obj.position.x && mouseY >= obj.position.y && mouseX <= (obj.position.x + blockSize.x) && mouseY <= (obj.position.y + blockSize.y)) {
 					draggedObjectID = key
 					draggedObjectMouseDiff.x = obj.position.x - mouseX
 					draggedObjectMouseDiff.y = obj.position.y - mouseY
+					draggingObject = true
 				} else if(obj.type == 2 && Math.sqrt(Math.pow(obj.position.x - mouseX, 2) + Math.pow(obj.position.y - mouseY, 2)) <= switchRadius) {
 					draggedObjectID = key
 					draggedObjectMouseDiff.x = obj.position.x - mouseX
 					draggedObjectMouseDiff.y = obj.position.y - mouseY
+					draggingObject = true
 				}
+			}
+			if(!draggingObject) {
+				draggingSketch = true
+				preDragMousePos.x = mouseX
+				preDragMousePos.y = mouseY
 			}
 			break
 		case 2:
@@ -254,18 +296,13 @@ canvas.addEventListener('mousedown', (event) => {
 });
 
 canvas.addEventListener('mouseup', (event) => {
+	draggingSketch = false
 	if(draggedObjectID != null) {
 		draggedObjectID = null;
 	}
 });
 
 window.addEventListener('keydown', (event) => {
-	if (event.key === 'w' || event.key === 'W') {
-		createObject('block', Math.floor(Math.random() * 999999999999999), 'neues element');
-	}
-	if (event.key === 'q' || event.key === 'Q') {
-		createObject('switch', Math.floor(Math.random() * 999999999999999));
-	}
 });
 
 window.addEventListener('contextmenu', (event) => {
@@ -276,6 +313,16 @@ window.addEventListener('resize', (event) => {
 	canvas.width = window.innerWidth - 200
 	canvas.height = window.innerHeight
 });
+
+downloadButton.addEventListener("click", () => {
+	let valueinput = save()
+    let blobdtMIME = new Blob([valueinput], { type: "text/plain" })
+    let url = URL.createObjectURL(blobdtMIME)
+    let anele = document.createElement("a")
+    anele.setAttribute("download", `${sketchName}.json`);
+    anele.href = url;
+    anele.click();
+})
 
 /*
  * GUI
@@ -311,69 +358,57 @@ function drawObject(id) {
 		toPos = null
 
 		// Draw wires
-		//ctx.beginPath()
 		if(objectMap.get(obj.from).type == BLOCK) {
 			let relY = (blockSize.y / objectMap.get(obj.from).output.length) * (obj.valIndex + 0.5)
-			//ctx.moveTo(objectMap.get(obj.from).position.x + blockSize.x + studLen, objectMap.get(obj.from).position.y + relY/*blockSize.y / 2*/)
 			rightStudPositions.push([objectMap.get(obj.from).position.x + blockSize.x, objectMap.get(obj.from).position.y + relY])
 			fromPos = [objectMap.get(obj.from).position.x + blockSize.x + studLen, objectMap.get(obj.from).position.y + relY]
 		} else if(objectMap.get(obj.from).type == WIRE) {
-			//ctx.moveTo(objectMap.get(obj.from).position.x, objectMap.get(obj.from).position.y)
 			fromPos = [objectMap.get(obj.from).position.x, objectMap.get(obj.from).position.y]
 		} else if(objectMap.get(obj.from).type == SWITCH) {
-			//ctx.moveTo(objectMap.get(obj.from).position.x + switchRadius + studLen, objectMap.get(obj.from).position.y)
 			fromPos = [objectMap.get(obj.from).position.x + switchRadius + studLen, objectMap.get(obj.from).position.y]
 		}
 		if(objectMap.get(obj.to).type == BLOCK) {
 			let relY = (blockSize.y / objectMap.get(obj.to).input.length) * (obj.inIndex + 0.5)
-			//ctx.lineTo(objectMap.get(obj.to).position.x - studLen, objectMap.get(obj.to).position.y + relY)
 			leftStudPositions.push([objectMap.get(obj.to).position.x - studLen, objectMap.get(obj.to).position.y + relY])
 			toPos = [objectMap.get(obj.to).position.x - studLen, objectMap.get(obj.to).position.y + relY]
 		} else if(objectMap.get(obj.to).type == WIRE) {
-			//ctx.moveTo(objectMap.get(obj.to).position.x, objectMap.get(obj.to).position.y)
 			toPos = [objectMap.get(obj.to).position.x, objectMap.get(obj.to).position.y]
 		}
 
-		drawLine(fromPos[0], fromPos[1], toPos[0], toPos[1])
-
-		//ctx.stroke()
+		drawLine(fromPos[0] + sketchOffset.x, fromPos[1] + sketchOffset.y, toPos[0] + sketchOffset.x, toPos[1] + sketchOffset.y)
 		break
 	case BLOCK:	
 		ctx.fillStyle = 'white'
-		ctx.fillRect(obj.position.x, obj.position.y, blockSize.x, blockSize.y);
+		ctx.fillRect(obj.position.x + sketchOffset.x, obj.position.y + sketchOffset.y, blockSize.x, blockSize.y);
 		if(id == draggedObjectID) {
 			ctx.strokeStyle = 'rgb(200, 200, 200)'
 		}
 		ctx.fillStyle = 'black'
 		ctx.font = "16px Arial";
-		ctx.fillText(obj.label, obj.position.x + 5, obj.position.y + 21);
+		ctx.fillText(obj.label, obj.position.x + sketchOffset.x + 5, obj.position.y + sketchOffset.y + 21);
 		ctx.beginPath();
-		ctx.rect(obj.position.x, obj.position.y, blockSize.x, blockSize.y);
+		ctx.rect(obj.position.x + sketchOffset.x, obj.position.y + sketchOffset.y, blockSize.x, blockSize.y);
 		ctx.stroke()
 
 		// Right studs
 		for(let i = 0; i < obj.output.length; i++) {
 			ctx.strokeStyle = (obj.output[i] ? 'yellow' : 'black')
 			let relY = (blockSize.y / obj.output.length) * (i + 0.5)
-			drawLine(obj.position.x + blockSize.x, obj.position.y + relY, obj.position.x + blockSize.x + studLen, obj.position.y + relY)
-			/*ctx.beginPath()
-			ctx.moveTo(obj.position.x + blockSize.x, obj.position.y + relY)
-			ctx.lineTo(obj.position.x + blockSize.x + studLen, obj.position.y + relY)
-			ctx.stroke()*/
+			drawLine(obj.position.x + blockSize.x + sketchOffset.x, obj.position.y + relY + sketchOffset.y, obj.position.x + sketchOffset.x + blockSize.x + studLen, obj.position.y + sketchOffset.y + relY)
 		}
 		// Left studs
 		for(let i = 0; i < obj.input.length; i++) {
 			ctx.strokeStyle = (obj.input[i] ? 'yellow' : 'black')
 			ctx.beginPath()
 			let relY = (blockSize.y / obj.input.length) * (i + 0.5)
-			ctx.moveTo(obj.position.x, obj.position.y + relY)
-			ctx.lineTo(obj.position.x - studLen, obj.position.y + relY)
+			ctx.moveTo(obj.position.x + sketchOffset.x, obj.position.y + sketchOffset.y + relY)
+			ctx.lineTo(obj.position.x + sketchOffset.x - studLen, obj.position.y + sketchOffset.y + relY)
 			ctx.stroke()
 		}
 		break
 	case SWITCH:
 		ctx.beginPath();
-		ctx.arc(obj.position.x, obj.position.y, switchRadius, 0, 2 * Math.PI);
+		ctx.arc(obj.position.x + sketchOffset.x, obj.position.y + sketchOffset.y, switchRadius, 0, 2 * Math.PI);
 		ctx.fillStyle = (obj.powered ? "yellow" : 'rgb(200, 200, 200)');
 		ctx.fill();
 		ctx.strokeStyle = "black";
@@ -382,8 +417,8 @@ function drawObject(id) {
 		// Stud
 		ctx.strokeStyle = (obj.powered ? 'yellow' : 'black')
 		ctx.beginPath()
-		ctx.moveTo(obj.position.x + switchRadius, obj.position.y)
-		ctx.lineTo(obj.position.x + studLen + switchRadius, obj.position.y)
+		ctx.moveTo(obj.position.x + switchRadius + sketchOffset.x, obj.position.y + sketchOffset.y)
+		ctx.lineTo(obj.position.x + studLen + switchRadius + sketchOffset.x, obj.position.y + sketchOffset.y)
 		ctx.stroke()
 		break
 	}
@@ -433,14 +468,14 @@ function draw() {
 	ctx.lineWidth = 1
 	for(let i = 0; i <= canvas.width; i += cellSize) {
 		ctx.beginPath()
-		ctx.moveTo(i, 0)
-		ctx.lineTo(i, canvas.height)
+		ctx.moveTo(i + (sketchOffset.x % cellSize), (sketchOffset.y % cellSize))
+		ctx.lineTo(i + (sketchOffset.x % cellSize), canvas.height + (sketchOffset.y % cellSize))
 		ctx.stroke()
 	}
 	for(let i = 0; i <= canvas.height; i += cellSize) {
 		ctx.beginPath()
-		ctx.moveTo(0, i)
-		ctx.lineTo(canvas.width, i)
+		ctx.moveTo(sketchOffset.x % cellSize, i + (sketchOffset.y % cellSize))
+		ctx.lineTo(canvas.width + (sketchOffset.x % cellSize), i + (sketchOffset.y % cellSize))
 		ctx.stroke()
 	}
 
@@ -455,6 +490,8 @@ function draw() {
 	
 	updateAllOfType(WIRE)
 	updateAllOfType(BLOCK)
+		
+	sketchName = document.getElementById("name").value
 
 	requestAnimationFrame(draw);
 }
