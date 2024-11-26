@@ -47,6 +47,7 @@ canvas {
 	width: 280px;
 	height: 30px;
 	margin-bottom: 10px;
+	padding-left: 10px;
 }
 
 .with-margin {
