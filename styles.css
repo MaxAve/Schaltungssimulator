@@ -16,8 +16,9 @@ p {
 }
 
 #menu {
-	width: 320px; 
-	background-color: rgb(240, 240, 240);
+	width: 340px; 
+	#background-color: rgb(235, 236, 244);
+	background-image: linear-gradient(to right, rgb(225, 226, 234), white);
 	color: #fff;
 	display: flex;
 	flex-direction: column; 
@@ -29,6 +30,9 @@ p {
 #canvas-container {
 	width: auto;
 	height: 100%;
+	border: 1px;
+	border-style: solid;
+	border-color: rgb(120, 120, 120);
 }
 
 canvas {
@@ -56,6 +60,7 @@ canvas {
 
 .file-input {
 	color: black;
+	margin-bottom: 10px;
 }
 
 #item-select {
