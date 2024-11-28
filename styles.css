@@ -16,7 +16,7 @@ p {
 }
 
 #menu {
-	width: 300px; 
+	width: 320px; 
 	background-color: rgb(240, 240, 240);
 	color: #fff;
 	display: flex;
@@ -56,4 +56,14 @@ canvas {
 
 .file-input {
 	color: black;
+}
+
+#item-select {
+	margin-top: 25px;
+	background-color: white;
+	width: 280px;
+	height: calc(100vh - 300px);
+	border: 1px;
+	border-style: solid;
+	border-color: rgb(120, 120, 120);
 }

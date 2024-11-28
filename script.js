@@ -323,7 +323,7 @@ downloadButton.addEventListener("click", () => {
 })
 
 uploadButton.addEventListener("click", () => {
-	confirm('Sind Sie sicher, dass Sie eine neue Datei hochladen möchten? Die jetzige Skizze wird dann gelöscht!')
+	//alert('Achtung: beim hochladen wird die jetzige Skizze gelöscht!')
 })
 
 /*
@@ -466,7 +466,7 @@ function draw() {
     ctx.clearRect(0, 0, canvas.width, canvas.height)
 
 	// Background lines
-	ctx.strokeStyle = "rgb(240, 240, 240)"
+	ctx.strokeStyle = "rgb(230, 230, 230)"
 	ctx.lineWidth = 1
 	for(let i = 0; i <= canvas.width; i += cellSize) {
 		ctx.beginPath()
