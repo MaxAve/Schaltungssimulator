@@ -377,7 +377,7 @@ function drawObject(id) {
 			toPos = [objectMap.get(obj.to).position.x, objectMap.get(obj.to).position.y]
 		}
 
-		drawLine(fromPos[0] + sketchOffset.x, fromPos[1] + sketchOffset.y, toPos[0] + sketchOffset.x, toPos[1] + sketchOffset.y)
+		drawWire(fromPos[0] + sketchOffset.x, fromPos[1] + sketchOffset.y, toPos[0] + sketchOffset.x, toPos[1] + sketchOffset.y)
 		break
 	case BLOCK:	
 		ctx.fillStyle = 'white'
@@ -428,7 +428,7 @@ function drawObject(id) {
 
 //createObject('block', 69, 'NAND');
 //objectMap.get(69).operation = NAND 
-/*const id69 = addLogicGateBlock(GateType.NAND)
+const id69 = addLogicGateBlock(GateType.NAND)
 createObject('block', 70, 'XOR');
 createObject('block', 71, 'XOR');
 objectMap.get(70).operation = XOR
@@ -436,7 +436,7 @@ objectMap.get(71).operation = XOR
 objectMap.get(70).input.push(false)
 connectWire(id69, 70, 4)
 connectWire(id69, 71,99)
-objectMap.get(99).valIndex = 0*/
+objectMap.get(99).valIndex = 0
 //connectWire(69, 70, 5)
 //objectMap.get(5).inIndex = 1
 //objectMap.get(4).valIndex = 0
