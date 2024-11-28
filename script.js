@@ -16,7 +16,17 @@ let draggedObjectMouseDiff = {x: 0, y: 0}
 let downloadButton = document.querySelector("#download-button")
 let renameButton = document.querySelector("#rename-button")
 let uploadConfirmButton = document.querySelector("#upload-button")
-//let uploadButton = document.querySelector("#file-upload")
+
+let bnot = document.querySelector("#bnot")
+let band = document.querySelector("#band")
+let bor = document.querySelector("#bor")
+let bxor = document.querySelector("#bxor")
+let bnand = document.querySelector("#bnand")
+let bnor = document.querySelector("#bnor")
+let bxnor = document.querySelector("#bxnor")
+let bkk = document.querySelector("#bkk")
+let bsch = document.querySelector("#bsch")
+let bgb = document.querySelector("#bgb")
 
 const blockSize = {x: cellSize * 5, y: cellSize * 7}
 const switchRadius = cellSize
@@ -30,6 +40,8 @@ function toScreenY(worldY) {return worldY + sketchOffset.y}
 const preDragMousePos = {x: 0, y: 0}
 const dragDiff = {x: 0, y: 0}
 let draggingSketch = false
+
+wireOnColor = 'rgb(252, 215, 27)'
 
 /*
  * Functions
@@ -99,6 +111,7 @@ const objectPresets = {
 		input: [false],
 		output: [],
 		operation: null,
+		invertsOutput: false,
 	},
 	'switch': {
 		type: 2,
@@ -188,6 +201,7 @@ function addLogicGateBlock(type) {
 	let inputs = 0
 	let outputs = 0
 	let operation = null
+	let invertsOutput = false;
 	switch(type) {
 		case GateType.NOT:
 			label = 'NOT'
@@ -212,12 +226,14 @@ function addLogicGateBlock(type) {
 			inputs = 2
 			outputs = 1
 			operation = NAND
+			invertsOutput = true;
 			break
 		case GateType.NOR:
 			label = 'NOR'
 			inputs = 2
 			outputs = 1
 			operation = NOR
+			invertsOutput = true;
 			break
 		case GateType.XOR:
 			label = 'XOR'
@@ -229,6 +245,7 @@ function addLogicGateBlock(type) {
 	const objectID = genID() 
 	createObject('block', objectID, label)
 	objectMap.get(objectID).operation = operation
+	objectMap.get(objectID).invertsOutput = invertsOutput;
 	objectMap.get(objectID).input = new Array(inputs).fill(false)
 	objectMap.get(objectID).output = new Array(outputs).fill(false)
 	return objectID
@@ -334,6 +351,41 @@ uploadConfirmButton.addEventListener("click", () => {
 	}
 })
 
+bnot.addEventListener("click", () => {
+})
+
+band.addEventListener("click", () => {
+	addLogicGateBlock(GateType.AND)
+})
+
+bor.addEventListener("click", () => {
+	addLogicGateBlock(GateType.OR)
+})
+
+bxor.addEventListener("click", () => {
+	addLogicGateBlock(GateType.XOR)
+})
+
+bnand.addEventListener("click", () => {
+	addLogicGateBlock(GateType.NAND)
+})
+
+bnor.addEventListener("click", () => {
+	addLogicGateBlock(GateType.NOR)
+})
+
+bxnor.addEventListener("click", () => {
+})
+
+bkk.addEventListener("click", () => {
+})
+
+bsch.addEventListener("click", () => {
+})
+
+bgb.addEventListener("click", () => {
+})
+
 /*
  * GUI
 */
@@ -356,13 +408,13 @@ function drawWire(x1, y1, x2, y2) {
 
 function drawObject(id) {
 	const obj = objectMap.get(id)
-	ctx.lineWidth = 2
+	ctx.lineWidth = 3
 	ctx.strokeStyle = 'black'
 	const studLen = 20
 	switch(obj.type) {
 	case WIRE:
 		if(obj.powered)
-			ctx.strokeStyle = 'red'
+			ctx.strokeStyle = wireOnColor
 		leftStudPositions = []
 		rightStudPositions = []
 
@@ -403,14 +455,25 @@ function drawObject(id) {
 		ctx.stroke()
 
 		// Right studs
-		for(let i = 0; i < obj.output.length; i++) {
-			ctx.strokeStyle = (obj.output[i] ? 'red' : 'black')
-			let relY = (blockSize.y / obj.output.length) * (i + 0.5)
-			drawLine(obj.position.x + blockSize.x + sketchOffset.x, obj.position.y + relY + sketchOffset.y, toScreenX(obj.position.x) + blockSize.x + studLen, toScreenY(obj.position.y) + relY)
+		if(obj.invertsOutput) {
+			for(let i = 0; i < obj.output.length; i++) {
+				ctx.strokeStyle = 'black' 
+				let relY = (blockSize.y / obj.output.length) * (i + 0.5)
+				//drawLine(obj.position.x + blockSize.x + sketchOffset.x, obj.position.y + relY + sketchOffset.y, toScreenX(obj.position.x) + blockSize.x + studLen, toScreenY(obj.position.y) + relY)
+				ctx.beginPath();
+				ctx.arc(toScreenX(obj.position.x) + blockSize.x + 10, toScreenY(obj.position.y) + relY, 10, 0, 2 * Math.PI);		
+				ctx.stroke();
+			}
+		} else {
+			for(let i = 0; i < obj.output.length; i++) {
+				ctx.strokeStyle = (obj.output[i] ? wireOnColor : 'black')
+				let relY = (blockSize.y / obj.output.length) * (i + 0.5)
+				drawLine(obj.position.x + blockSize.x + sketchOffset.x, obj.position.y + relY + sketchOffset.y, toScreenX(obj.position.x) + blockSize.x + studLen, toScreenY(obj.position.y) + relY)
+			}
 		}
 		// Left studs
 		for(let i = 0; i < obj.input.length; i++) {
-			ctx.strokeStyle = (obj.input[i] ? 'red' : 'black')
+			ctx.strokeStyle = (obj.input[i] ? wireOnColor : 'black')
 			ctx.beginPath()
 			let relY = (blockSize.y / obj.input.length) * (i + 0.5)
 			ctx.moveTo(toScreenX(obj.position.x), toScreenY(obj.position.y) + relY)
@@ -427,7 +490,7 @@ function drawObject(id) {
 		ctx.stroke();
 		
 		// Stud
-		ctx.strokeStyle = (obj.powered ? 'red' : 'black')
+		ctx.strokeStyle = (obj.powered ? wireOnColor : 'black')
 		ctx.beginPath()
 		ctx.moveTo(toScreenX(obj.position.x) + switchRadius, toScreenY(obj.position.y))
 		ctx.lineTo(toScreenX(obj.position.x) + studLen + switchRadius, toScreenY(obj.position.y))
@@ -438,7 +501,7 @@ function drawObject(id) {
 
 //createObject('block', 69, 'NAND');
 //objectMap.get(69).operation = NAND 
-const id69 = addLogicGateBlock(GateType.NAND)
+/*const id69 = addLogicGateBlock(GateType.NAND)
 createObject('block', 70, 'XOR');
 createObject('block', 71, 'XOR');
 objectMap.get(70).operation = XOR
@@ -446,7 +509,7 @@ objectMap.get(71).operation = XOR
 objectMap.get(70).input.push(false)
 connectWire(id69, 70, 4)
 connectWire(id69, 71,99)
-objectMap.get(99).valIndex = 0
+objectMap.get(99).valIndex = 0*/
 //connectWire(69, 70, 5)
 //objectMap.get(5).inIndex = 1
 //objectMap.get(4).valIndex = 0
