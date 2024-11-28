@@ -15,12 +15,18 @@ let draggedObjectMouseDiff = {x: 0, y: 0}
 
 let downloadButton = document.querySelector("#download-button")
 let renameButton = document.querySelector("#rename-button")
-let uploadButton = document.querySelector("#file-upload")
+let uploadConfirmButton = document.querySelector("#upload-button")
+//let uploadButton = document.querySelector("#file-upload")
 
 const blockSize = {x: cellSize * 5, y: cellSize * 7}
 const switchRadius = cellSize
 
 const sketchOffset = {x: 0, y: 0}
+
+// Used for rendering objects with scrolling and zoom offset
+function toScreenX(worldX) {return worldX + sketchOffset.x}
+function toScreenY(worldY) {return worldY + sketchOffset.y}
+
 const preDragMousePos = {x: 0, y: 0}
 const dragDiff = {x: 0, y: 0}
 let draggingSketch = false
@@ -259,18 +265,18 @@ canvas.addEventListener('mousemove', (event) => {
 });
 
 canvas.addEventListener('mousedown', (event) => {
-	relX = mouseX - sketchOffset.x
-	relY = mouseY - sketchOffset.y
+	worldMouseX = mouseX - sketchOffset.x
+	worldMouseY = mouseY - sketchOffset.y
 	switch (event.button) {
 		case 0:
 			draggingObject = false
 			for(let [key, obj] of objectMap) {
-				if(obj.type == 1 && relX >= obj.position.x && relY >= obj.position.y && relX <= (obj.position.x + blockSize.x) && relY <= (obj.position.y + blockSize.y)) {
+				if(obj.type == 1 && worldMouseX >= obj.position.x && worldMouseY >= obj.position.y && worldMouseX <= (obj.position.x + blockSize.x) && worldMouseY <= (obj.position.y + blockSize.y)) {
 					draggedObjectID = key
 					draggedObjectMouseDiff.x = obj.position.x - mouseX
 					draggedObjectMouseDiff.y = obj.position.y - mouseY
 					draggingObject = true
-				} else if(obj.type == 2 && Math.sqrt(Math.pow(obj.position.x - (mouseX - sketchOffset.x), 2) + Math.pow(obj.position.y - (mouseY - sketchOffset.y), 2)) <= switchRadius) {
+				} else if(obj.type == 2 && Math.sqrt(Math.pow(obj.position.x - worldMouseX, 2) + Math.pow(obj.position.y - (worldMouseY), 2)) <= switchRadius) {
 					draggedObjectID = key
 					draggedObjectMouseDiff.x = obj.position.x - mouseX
 					draggedObjectMouseDiff.y = obj.position.y - mouseY
@@ -285,7 +291,7 @@ canvas.addEventListener('mousedown', (event) => {
 			break
 		case 2:
 			for(let [key, obj] of objectMap) {
-				if(obj.type == 2 && Math.sqrt(Math.pow(obj.position.x - (mouseX - sketchOffset.x), 2) + Math.pow(obj.position.y - (mouseY - sketchOffset.y), 2)) <= switchRadius) {
+				if(obj.type == 2 && Math.sqrt(Math.pow(obj.position.x - (worldMouseX), 2) + Math.pow(obj.position.y - (worldMouseY), 2)) <= switchRadius) {
 					obj.powered = !obj.powered
 				}
 			}
@@ -322,8 +328,10 @@ downloadButton.addEventListener("click", () => {
     anele.click();
 })
 
-uploadButton.addEventListener("click", () => {
-	//alert('Achtung: beim hochladen wird die jetzige Skizze gelöscht!')
+uploadConfirmButton.addEventListener("click", () => {
+	if(confirm('Achtung: beim hochladen wird die jetzige Skizze gelöscht!')) {
+		console.log('TODO: Upload file')
+	}
 })
 
 /*
@@ -338,7 +346,9 @@ function drawLine(x1, y1, x2, y2) {
 }
 
 function drawWire(x1, y1, x2, y2) {
-	const half = (x2 - x1) / 2
+	const xDis = x2 - x1
+	const yDis = y2 - y1
+	const half = xDis / 2
 	drawLine(x1, y1, x1 + half, y1)
 	drawLine(x1 + half, y1, x1 + half, y2)
 	drawLine(x1 + half, y2, x2, y2)
@@ -377,40 +387,40 @@ function drawObject(id) {
 			toPos = [objectMap.get(obj.to).position.x, objectMap.get(obj.to).position.y]
 		}
 
-		drawWire(fromPos[0] + sketchOffset.x, fromPos[1] + sketchOffset.y, toPos[0] + sketchOffset.x, toPos[1] + sketchOffset.y)
+		drawWire(toScreenX(fromPos[0]), toScreenY(fromPos[1]), toScreenX(toPos[0]), toScreenY(toPos[1]))
 		break
 	case BLOCK:	
 		ctx.fillStyle = 'white'
-		ctx.fillRect(obj.position.x + sketchOffset.x, obj.position.y + sketchOffset.y, blockSize.x, blockSize.y);
+		ctx.fillRect(toScreenX(obj.position.x), toScreenY(obj.position.y), blockSize.x, blockSize.y);
 		if(id == draggedObjectID) {
 			ctx.strokeStyle = 'rgb(200, 200, 200)'
 		}
 		ctx.fillStyle = 'black'
 		ctx.font = "16px Arial";
-		ctx.fillText(obj.label, obj.position.x + sketchOffset.x + 5, obj.position.y + sketchOffset.y + 21);
+		ctx.fillText(obj.label, toScreenX(obj.position.x) + 5, toScreenY(obj.position.y) + 21);
 		ctx.beginPath();
-		ctx.rect(obj.position.x + sketchOffset.x, obj.position.y + sketchOffset.y, blockSize.x, blockSize.y);
+		ctx.rect(toScreenX(obj.position.x), toScreenY(obj.position.y), blockSize.x, blockSize.y);
 		ctx.stroke()
 
 		// Right studs
 		for(let i = 0; i < obj.output.length; i++) {
 			ctx.strokeStyle = (obj.output[i] ? 'yellow' : 'black')
 			let relY = (blockSize.y / obj.output.length) * (i + 0.5)
-			drawLine(obj.position.x + blockSize.x + sketchOffset.x, obj.position.y + relY + sketchOffset.y, obj.position.x + sketchOffset.x + blockSize.x + studLen, obj.position.y + sketchOffset.y + relY)
+			drawLine(obj.position.x + blockSize.x + sketchOffset.x, obj.position.y + relY + sketchOffset.y, toScreenX(obj.position.x) + blockSize.x + studLen, toScreenY(obj.position.y) + relY)
 		}
 		// Left studs
 		for(let i = 0; i < obj.input.length; i++) {
 			ctx.strokeStyle = (obj.input[i] ? 'yellow' : 'black')
 			ctx.beginPath()
 			let relY = (blockSize.y / obj.input.length) * (i + 0.5)
-			ctx.moveTo(obj.position.x + sketchOffset.x, obj.position.y + sketchOffset.y + relY)
-			ctx.lineTo(obj.position.x + sketchOffset.x - studLen, obj.position.y + sketchOffset.y + relY)
+			ctx.moveTo(toScreenX(obj.position.x), toScreenY(obj.position.y) + relY)
+			ctx.lineTo(toScreenX(obj.position.x) - studLen, toScreenY(obj.position.y) + relY)
 			ctx.stroke()
 		}
 		break
 	case SWITCH:
 		ctx.beginPath();
-		ctx.arc(obj.position.x + sketchOffset.x, obj.position.y + sketchOffset.y, switchRadius, 0, 2 * Math.PI);
+		ctx.arc(toScreenX(obj.position.x), toScreenY(obj.position.y), switchRadius, 0, 2 * Math.PI);
 		ctx.fillStyle = (obj.powered ? "yellow" : 'rgb(200, 200, 200)');
 		ctx.fill();
 		ctx.strokeStyle = "black";
@@ -419,8 +429,8 @@ function drawObject(id) {
 		// Stud
 		ctx.strokeStyle = (obj.powered ? 'yellow' : 'black')
 		ctx.beginPath()
-		ctx.moveTo(obj.position.x + switchRadius + sketchOffset.x, obj.position.y + sketchOffset.y)
-		ctx.lineTo(obj.position.x + studLen + switchRadius + sketchOffset.x, obj.position.y + sketchOffset.y)
+		ctx.moveTo(toScreenX(obj.position.x) + switchRadius, toScreenY(obj.position.y))
+		ctx.lineTo(toScreenX(obj.position.x) + studLen + switchRadius, toScreenY(obj.position.y))
 		ctx.stroke()
 		break
 	}
