@@ -362,7 +362,7 @@ function drawObject(id) {
 	switch(obj.type) {
 	case WIRE:
 		if(obj.powered)
-			ctx.strokeStyle = 'yellow'
+			ctx.strokeStyle = 'red'
 		leftStudPositions = []
 		rightStudPositions = []
 
@@ -404,13 +404,13 @@ function drawObject(id) {
 
 		// Right studs
 		for(let i = 0; i < obj.output.length; i++) {
-			ctx.strokeStyle = (obj.output[i] ? 'yellow' : 'black')
+			ctx.strokeStyle = (obj.output[i] ? 'red' : 'black')
 			let relY = (blockSize.y / obj.output.length) * (i + 0.5)
 			drawLine(obj.position.x + blockSize.x + sketchOffset.x, obj.position.y + relY + sketchOffset.y, toScreenX(obj.position.x) + blockSize.x + studLen, toScreenY(obj.position.y) + relY)
 		}
 		// Left studs
 		for(let i = 0; i < obj.input.length; i++) {
-			ctx.strokeStyle = (obj.input[i] ? 'yellow' : 'black')
+			ctx.strokeStyle = (obj.input[i] ? 'red' : 'black')
 			ctx.beginPath()
 			let relY = (blockSize.y / obj.input.length) * (i + 0.5)
 			ctx.moveTo(toScreenX(obj.position.x), toScreenY(obj.position.y) + relY)
@@ -421,13 +421,13 @@ function drawObject(id) {
 	case SWITCH:
 		ctx.beginPath();
 		ctx.arc(toScreenX(obj.position.x), toScreenY(obj.position.y), switchRadius, 0, 2 * Math.PI);
-		ctx.fillStyle = (obj.powered ? "yellow" : 'rgb(200, 200, 200)');
+		ctx.fillStyle = (obj.powered ? "red" : 'rgb(200, 200, 200)');
 		ctx.fill();
 		ctx.strokeStyle = "black";
 		ctx.stroke();
 		
 		// Stud
-		ctx.strokeStyle = (obj.powered ? 'yellow' : 'black')
+		ctx.strokeStyle = (obj.powered ? 'red' : 'black')
 		ctx.beginPath()
 		ctx.moveTo(toScreenX(obj.position.x) + switchRadius, toScreenY(obj.position.y))
 		ctx.lineTo(toScreenX(obj.position.x) + studLen + switchRadius, toScreenY(obj.position.y))

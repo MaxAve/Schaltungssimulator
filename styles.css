@@ -18,7 +18,7 @@ p {
 #menu {
 	width: 340px; 
 	background-color: rgb(239, 242, 247);
-	#background-image: linear-gradient(to right, rgb(225, 226, 234), white);
+	/*background-image: linear-gradient(to right, rgb(225, 226, 234), white);*/
 	color: #fff;
 	display: flex;
 	flex-direction: column; 
@@ -26,7 +26,6 @@ p {
 	align-items: center;
 	padding-top: 1rem;
 }
-
 #canvas-container {
 	width: auto;
 	height: 100%;
@@ -67,10 +66,14 @@ canvas {
 	margin-top: 25px;
 	background-color: white;
 	width: 280px;
-	height: calc(100vh - 300px);
+	height: calc(100vh - 400px);
 	border: 1px;
 	border-style: solid;
 	border-color: rgb(120, 120, 120);
 	text-align: center;
 	padding: 15px;
+}
+
+a {
+	font-family: Arial;
 }
