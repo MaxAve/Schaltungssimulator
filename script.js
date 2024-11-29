@@ -83,6 +83,10 @@ function NOR(input) {
 	return !OR(input)
 }
 
+function XNOR(input) {
+	return !XOR(input)
+}
+
 /*
  * Objects
 */
@@ -108,10 +112,15 @@ const objectPresets = {
 			x: 0,
 			y: 0,
 		},
+		size: {
+			x: blockSize.x,
+			y: blockSize.y,
+		},
 		input: [false],
 		output: [],
 		operation: null,
 		invertsOutput: false,
+		isSquare: false,
 	},
 	'switch': {
 		type: 2,
@@ -193,6 +202,7 @@ const GateType = {
 	NAND: 4,
 	NOR:  5,
 	XOR:  6,
+	XNOR: 7,
 }
 
 // Creates a new logic gate block object from a selected preset
@@ -201,51 +211,65 @@ function addLogicGateBlock(type) {
 	let inputs = 0
 	let outputs = 0
 	let operation = null
-	let invertsOutput = false;
+	let invertsOutput = false
+	let isSquare = false
+	let height = blockSize.y
 	switch(type) {
 		case GateType.NOT:
-			label = 'NOT'
-			inputs = 2
+			label = '1'
+			inputs = 1
 			outputs = 1
 			operation = NOT
+			isSquare = true
+			invertsOutput = true
+			height = blockSize.x
 			break
 		case GateType.AND:
-			label = 'AND'
+			label = '&'
 			inputs = 2
 			outputs = 1
 			operation = AND
 			break
 		case GateType.OR:
-			label = 'OR'
+			label = '≥1'
 			inputs = 2
 			outputs = 1
 			operation = OR
 			break
 		case GateType.NAND:
-			label = 'NAND'
+			label = '&'
 			inputs = 2
 			outputs = 1
 			operation = NAND
-			invertsOutput = true;
+			invertsOutput = true
 			break
 		case GateType.NOR:
-			label = 'NOR'
+			label = '≥1'
 			inputs = 2
 			outputs = 1
 			operation = NOR
 			invertsOutput = true;
 			break
 		case GateType.XOR:
-			label = 'XOR'
+			label = '=1'
 			inputs = 2
 			outputs = 1
 			operation = XOR
+			break
+		case GateType.XNOR:
+			label = '=1'
+			inputs = 2
+			outputs = 1
+			operation = XNOR
+			invertsOutput = true
 			break
 	}
 	const objectID = genID() 
 	createObject('block', objectID, label)
 	objectMap.get(objectID).operation = operation
-	objectMap.get(objectID).invertsOutput = invertsOutput;
+	objectMap.get(objectID).invertsOutput = invertsOutput
+	//objectMap.get(objectID).isSquare = isSquare
+	objectMap.get(objectID).size.y = height
 	objectMap.get(objectID).input = new Array(inputs).fill(false)
 	objectMap.get(objectID).output = new Array(outputs).fill(false)
 	return objectID
@@ -288,7 +312,7 @@ canvas.addEventListener('mousedown', (event) => {
 		case 0:
 			draggingObject = false
 			for(let [key, obj] of objectMap) {
-				if(obj.type == 1 && worldMouseX >= obj.position.x && worldMouseY >= obj.position.y && worldMouseX <= (obj.position.x + blockSize.x) && worldMouseY <= (obj.position.y + blockSize.y)) {
+				if(obj.type == 1 && worldMouseX >= obj.position.x && worldMouseY >= obj.position.y && worldMouseX <= (obj.position.x + obj.size.x) && worldMouseY <= (obj.position.y + obj.size.y)) {
 					draggedObjectID = key
 					draggedObjectMouseDiff.x = obj.position.x - mouseX
 					draggedObjectMouseDiff.y = obj.position.y - mouseY
@@ -352,6 +376,7 @@ uploadConfirmButton.addEventListener("click", () => {
 })
 
 bnot.addEventListener("click", () => {
+	addLogicGateBlock(GateType.NOT)
 })
 
 band.addEventListener("click", () => {
@@ -375,6 +400,7 @@ bnor.addEventListener("click", () => {
 })
 
 bxnor.addEventListener("click", () => {
+	addLogicGateBlock(GateType.XNOR)
 })
 
 bkk.addEventListener("click", () => {
@@ -423,16 +449,16 @@ function drawObject(id) {
 
 		// Draw wires
 		if(objectMap.get(obj.from).type == BLOCK) {
-			let relY = (blockSize.y / objectMap.get(obj.from).output.length) * (obj.valIndex + 0.5)
-			rightStudPositions.push([objectMap.get(obj.from).position.x + blockSize.x, objectMap.get(obj.from).position.y + relY])
-			fromPos = [objectMap.get(obj.from).position.x + blockSize.x + studLen, objectMap.get(obj.from).position.y + relY]
+			let relY = (objectMap.get(obj.from).size.y / objectMap.get(obj.from).output.length) * (obj.valIndex + 0.5)
+			rightStudPositions.push([objectMap.get(obj.from).position.x + objectMap.get(obj.from).size.x, objectMap.get(obj.from).position.y + relY])
+			fromPos = [objectMap.get(obj.from).position.x + objectMap.get(obj.from).size.x + studLen, objectMap.get(obj.from).position.y + relY]
 		} else if(objectMap.get(obj.from).type == WIRE) {
 			fromPos = [objectMap.get(obj.from).position.x, objectMap.get(obj.from).position.y]
 		} else if(objectMap.get(obj.from).type == SWITCH) {
 			fromPos = [objectMap.get(obj.from).position.x + switchRadius + studLen, objectMap.get(obj.from).position.y]
 		}
 		if(objectMap.get(obj.to).type == BLOCK) {
-			let relY = (blockSize.y / objectMap.get(obj.to).input.length) * (obj.inIndex + 0.5)
+			let relY = (objectMap.get(obj.to).size.y / objectMap.get(obj.to).input.length) * (obj.inIndex + 0.5)
 			leftStudPositions.push([objectMap.get(obj.to).position.x - studLen, objectMap.get(obj.to).position.y + relY])
 			toPos = [objectMap.get(obj.to).position.x - studLen, objectMap.get(obj.to).position.y + relY]
 		} else if(objectMap.get(obj.to).type == WIRE) {
@@ -443,39 +469,41 @@ function drawObject(id) {
 		break
 	case BLOCK:	
 		ctx.fillStyle = 'white'
-		ctx.fillRect(toScreenX(obj.position.x), toScreenY(obj.position.y), blockSize.x, blockSize.y);
+		const blockWidth = obj.size.x
+		const blockHeight = obj.isSquare ? obj.size.x : obj.size.y
+		ctx.fillRect(toScreenX(obj.position.x), toScreenY(obj.position.y), blockWidth, blockHeight)
 		if(id == draggedObjectID) {
 			ctx.strokeStyle = 'rgb(200, 200, 200)'
 		}
 		ctx.fillStyle = 'black'
-		ctx.font = "16px Arial";
-		ctx.fillText(obj.label, toScreenX(obj.position.x) + 5, toScreenY(obj.position.y) + 21);
+		ctx.font = "32px Arial";
+		ctx.fillText(obj.label, toScreenX(obj.position.x + obj.size.x / 2 - ctx.measureText(obj.label).width / 2), toScreenY(obj.position.y + obj.size.y / 2 + 10));
 		ctx.beginPath();
-		ctx.rect(toScreenX(obj.position.x), toScreenY(obj.position.y), blockSize.x, blockSize.y);
+		ctx.rect(toScreenX(obj.position.x), toScreenY(obj.position.y), blockWidth, blockHeight);
 		ctx.stroke()
 
 		// Right studs
 		if(obj.invertsOutput) {
 			for(let i = 0; i < obj.output.length; i++) {
 				ctx.strokeStyle = 'black' 
-				let relY = (blockSize.y / obj.output.length) * (i + 0.5)
-				//drawLine(obj.position.x + blockSize.x + sketchOffset.x, obj.position.y + relY + sketchOffset.y, toScreenX(obj.position.x) + blockSize.x + studLen, toScreenY(obj.position.y) + relY)
+				let relY = (blockHeight / obj.output.length) * (i + 0.5)
+				//drawLine(obj.position.x + obj.size.x + sketchOffset.x, obj.position.y + relY + sketchOffset.y, toScreenX(obj.position.x) + obj.size.x + studLen, toScreenY(obj.position.y) + relY)
 				ctx.beginPath();
-				ctx.arc(toScreenX(obj.position.x) + blockSize.x + 10, toScreenY(obj.position.y) + relY, 10, 0, 2 * Math.PI);		
+				ctx.arc(toScreenX(obj.position.x) + obj.size.x + 10, toScreenY(obj.position.y) + relY, 10, 0, 2 * Math.PI);		
 				ctx.stroke();
 			}
 		} else {
 			for(let i = 0; i < obj.output.length; i++) {
 				ctx.strokeStyle = (obj.output[i] ? wireOnColor : 'black')
-				let relY = (blockSize.y / obj.output.length) * (i + 0.5)
-				drawLine(obj.position.x + blockSize.x + sketchOffset.x, obj.position.y + relY + sketchOffset.y, toScreenX(obj.position.x) + blockSize.x + studLen, toScreenY(obj.position.y) + relY)
+				let relY = (blockHeight / obj.output.length) * (i + 0.5)
+				drawLine(obj.position.x + obj.size.x + sketchOffset.x, obj.position.y + relY + sketchOffset.y, toScreenX(obj.position.x) + obj.size.x + studLen, toScreenY(obj.position.y) + relY)
 			}
 		}
 		// Left studs
 		for(let i = 0; i < obj.input.length; i++) {
 			ctx.strokeStyle = (obj.input[i] ? wireOnColor : 'black')
 			ctx.beginPath()
-			let relY = (blockSize.y / obj.input.length) * (i + 0.5)
+			let relY = (blockHeight / obj.input.length) * (i + 0.5)
 			ctx.moveTo(toScreenX(obj.position.x), toScreenY(obj.position.y) + relY)
 			ctx.lineTo(toScreenX(obj.position.x) - studLen, toScreenY(obj.position.y) + relY)
 			ctx.stroke()

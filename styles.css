@@ -84,6 +84,7 @@ a {
 .object-place {
 	width: 150px;
 	height: auto;
+	margin-top: 15px;
 }
 
 .object-label {
@@ -91,4 +92,8 @@ a {
 	margin-bottom: 25px;
 	font-family: Arial;
 	font-size: 20px;
+}
+
+.place-button:hover {
+	background-color: rgb(255, 251, 216);
 }
