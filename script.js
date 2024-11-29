@@ -8,6 +8,7 @@ let sketchName = 'Unbenannte Skizze'
 
 const cellSize = 20 // Used for the background grid
 
+let mouseDown = false
 let mouseX = 0;
 let mouseY = 0;
 let draggedObjectID = null
@@ -40,6 +41,8 @@ function toScreenY(worldY) {return worldY + sketchOffset.y}
 const preDragMousePos = {x: 0, y: 0}
 const dragDiff = {x: 0, y: 0}
 let draggingSketch = false
+
+let connectingWires = false
 
 wireOnColor = 'rgb(252, 215, 27)'
 
@@ -298,7 +301,7 @@ canvas.addEventListener('mousemove', (event) => {
     mouseX = event.clientX;
     mouseY = event.clientY;
 
-	if(draggingSketch) {
+	if(draggingSketch && !connectingWires) {
 		dragDiff.x = preDragMousePos.x - mouseX	
 		dragDiff.y = preDragMousePos.y - mouseY
 		sketchOffset.x -= dragDiff.x
@@ -311,6 +314,7 @@ canvas.addEventListener('mousemove', (event) => {
 });
 
 canvas.addEventListener('mousedown', (event) => {
+	mouseDown = true
 	worldMouseX = mouseX - sketchOffset.x
 	worldMouseY = mouseY - sketchOffset.y
 	switch (event.button) {
@@ -346,10 +350,12 @@ canvas.addEventListener('mousedown', (event) => {
 });
 
 canvas.addEventListener('mouseup', (event) => {
+	mouseDown = false
 	draggingSketch = false
 	if(draggedObjectID != null) {
 		draggedObjectID = null;
 	}
+	connectingWires = false
 });
 
 window.addEventListener('keydown', (event) => {
@@ -477,7 +483,7 @@ function drawObject(id) {
 		const blockWidth = obj.size.x
 		const blockHeight = obj.isSquare ? obj.size.x : obj.size.y
 		ctx.fillRect(toScreenX(obj.position.x), toScreenY(obj.position.y), blockWidth, blockHeight)
-		if(id == draggedObjectID) {
+		if(id == draggedObjectID && !connectingWires) {
 			ctx.strokeStyle = 'rgb(200, 200, 200)'
 		}
 		ctx.fillStyle = 'black'
@@ -487,6 +493,7 @@ function drawObject(id) {
 		ctx.rect(toScreenX(obj.position.x), toScreenY(obj.position.y), blockWidth, blockHeight);
 		ctx.stroke()
 
+		//TODO objects will be dragged and cancels wire connection; pls fix
 		// Right studs
 		if(obj.invertsOutput) {
 			for(let i = 0; i < obj.output.length; i++) {
@@ -497,8 +504,13 @@ function drawObject(id) {
 				ctx.arc(toScreenX(obj.position.x + obj.size.x + 10), toScreenY(obj.position.y + relY), 10, 0, 2 * Math.PI);		
 				ctx.stroke();
 
-				if(getDistance(toScreenX(obj.position.x + obj.size.x + 10), toScreenY(obj.position.y + relY), mouseX/*TODO*/)) {
-
+				if(getDistance(toScreenX(obj.position.x + obj.size.x - 10), toScreenY(obj.position.y + relY), mouseX, mouseY) < 20) {
+					if(mouseDown && draggedObjectID == null)
+						connectingWires = true
+					ctx.arc(toScreenX(obj.position.x + obj.size.x + 10), toScreenY(obj.position.y + relY), 20, 0, 2 * Math.PI)
+					ctx.fillStyle = 'rgba(255, 255, 0, 0.5)'
+					ctx.fill()
+					ctx.strokeStyle = "black"
 				}
 			}
 		} else {
@@ -506,6 +518,15 @@ function drawObject(id) {
 				ctx.strokeStyle = (obj.output[i] ? wireOnColor : 'black')
 				let relY = (blockHeight / obj.output.length) * (i + 0.5)
 				drawLine(obj.position.x + obj.size.x + sketchOffset.x, obj.position.y + relY + sketchOffset.y, toScreenX(obj.position.x) + obj.size.x + studLen, toScreenY(obj.position.y) + relY)
+			
+				if(getDistance(toScreenX(obj.position.x + obj.size.x - 10), toScreenY(obj.position.y + relY), mouseX, mouseY) < 20) {
+					if(mouseDown && draggedObjectID == null)
+						connectingWires = true
+					ctx.arc(toScreenX(obj.position.x + obj.size.x + 10), toScreenY(obj.position.y + relY), 20, 0, 2 * Math.PI)
+					ctx.fillStyle = 'rgba(255, 255, 0, 0.5)'
+					ctx.fill()
+					ctx.strokeStyle = "black"
+				}
 			}
 		}
 		// Left studs
@@ -516,6 +537,15 @@ function drawObject(id) {
 			ctx.moveTo(toScreenX(obj.position.x), toScreenY(obj.position.y) + relY)
 			ctx.lineTo(toScreenX(obj.position.x) - studLen, toScreenY(obj.position.y) + relY)
 			ctx.stroke()
+
+			if(getDistance(toScreenX(obj.position.x - 30), toScreenY(obj.position.y) + relY, mouseX, mouseY) < 20) {
+				if(mouseDown && draggedObjectID == null)
+					connectingWires = true
+				ctx.arc(toScreenX(obj.position.x) - studLen/2, toScreenY(obj.position.y) + relY, 20, 0, 2 * Math.PI)
+				ctx.fillStyle = 'rgba(255, 255, 0, 0.5)'
+				ctx.fill()
+				ctx.strokeStyle = "black"
+			}
 		}
 		break
 	case SWITCH:
@@ -568,7 +598,7 @@ connectWire(79, 420)*/
 //objectMap.get(23).inIndex = 1
 
 function draw() {
-	if(draggedObjectID != null) {
+	if(!connectingWires && draggedObjectID != null) {
 		objectMap.get(draggedObjectID).position.x = (mouseX + draggedObjectMouseDiff.x) - ((mouseX + draggedObjectMouseDiff.x) % cellSize)
 		objectMap.get(draggedObjectID).position.y = (mouseY + draggedObjectMouseDiff.y) - ((mouseY + draggedObjectMouseDiff.y) % cellSize)
 	}
