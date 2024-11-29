@@ -46,6 +46,21 @@ let connectingWires = false
 
 wireOnColor = 'rgb(252, 215, 27)'
 
+const colorSchemes = {
+	light: {
+		outline: 'black',
+		background: 'white',
+		lineColor: 'rgb(230, 230, 230)'
+	},
+	dark: {
+		outline: 'rgb(252, 85, 233)',
+		background: 'black',
+		lineColor: 'rgb(114, 19, 103)'
+	},
+}
+
+let selectedColorScheme = colorSchemes.dark
+
 /*
  * Functions
 */
@@ -446,7 +461,7 @@ function drawWire(x1, y1, x2, y2) {
 function drawObject(id) {
 	const obj = objectMap.get(id)
 	ctx.lineWidth = 3
-	ctx.strokeStyle = 'black'
+	ctx.strokeStyle = selectedColorScheme.outline
 	const studLen = 20
 	switch(obj.type) {
 	case WIRE:
@@ -479,13 +494,14 @@ function drawObject(id) {
 		drawWire(toScreenX(fromPos[0]), toScreenY(fromPos[1]), toScreenX(toPos[0]), toScreenY(toPos[1]))
 		break
 	case BLOCK:	
-		ctx.fillStyle = 'white'
+		ctx.fillStyle = selectedColorScheme.background
 		const blockWidth = obj.size.x
 		const blockHeight = obj.isSquare ? obj.size.x : obj.size.y
 		ctx.fillRect(toScreenX(obj.position.x), toScreenY(obj.position.y), blockWidth, blockHeight)
 		if(id == draggedObjectID && !connectingWires) {
 			ctx.strokeStyle = 'rgb(200, 200, 200)'
 		}
+		ctx.strokeStyle = selectedColorScheme.outline
 		ctx.fillStyle = 'black'
 		ctx.font = "32px Arial";
 		ctx.fillText(obj.label, toScreenX(obj.position.x + obj.size.x / 2 - ctx.measureText(obj.label).width / 2), toScreenY(obj.position.y + obj.size.y / 2 + 10));
@@ -515,7 +531,7 @@ function drawObject(id) {
 			}
 		} else {
 			for(let i = 0; i < obj.output.length; i++) {
-				ctx.strokeStyle = (obj.output[i] ? wireOnColor : 'black')
+				ctx.strokeStyle = (obj.output[i] ? wireOnColor : selectedColorScheme.outline)
 				let relY = (blockHeight / obj.output.length) * (i + 0.5)
 				drawLine(obj.position.x + obj.size.x + sketchOffset.x, obj.position.y + relY + sketchOffset.y, toScreenX(obj.position.x) + obj.size.x + studLen, toScreenY(obj.position.y) + relY)
 			
@@ -605,8 +621,12 @@ function draw() {
 
     ctx.clearRect(0, 0, canvas.width, canvas.height)
 
+	ctx.fillStyle = selectedColorScheme.background
+	ctx.fillRect(0, 0, canvas.width, canvas.height)
+
 	// Background lines
-	ctx.strokeStyle = "rgb(230, 230, 230)"
+	//ctx.strokeStyle = "rgb(230, 230, 230)"
+	ctx.strokeStyle = selectedColorScheme.lineColor
 	ctx.lineWidth = 1
 	for(let i = 0; i <= canvas.width; i += cellSize) {
 		ctx.beginPath()
