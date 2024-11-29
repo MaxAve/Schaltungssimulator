@@ -315,8 +315,8 @@ canvas.addEventListener('mousemove', (event) => {
 
 canvas.addEventListener('mousedown', (event) => {
 	mouseDown = true
-	worldMouseX = mouseX - sketchOffset.x
-	worldMouseY = mouseY - sketchOffset.y
+	worldMouseX = (mouseX - sketchOffset.x) + cellSize + (mouseX - sketchOffset.x) % cellSize // TODO this is a temporary fix, find out problem (likely to do with the way objects are snapped into place)
+	worldMouseY = (mouseY - sketchOffset.y) + cellSize + (mouseY - sketchOffset.y) % cellSize
 	switch (event.button) {
 		case 0:
 			draggingObject = false
