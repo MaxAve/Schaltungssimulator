@@ -17,6 +17,7 @@ let draggedObjectMouseDiff = {x: 0, y: 0}
 let downloadButton = document.querySelector("#download-button")
 let renameButton = document.querySelector("#rename-button")
 let uploadConfirmButton = document.querySelector("#upload-button")
+let colorSchemeToggleButton = document.querySelector("#color-scheme-toggle")
 
 let bnot = document.querySelector("#bnot")
 let band = document.querySelector("#band")
@@ -44,22 +45,30 @@ let draggingSketch = false
 
 let connectingWires = false
 
-wireOnColor = 'rgb(252, 215, 27)'
+//wireOnColor = 'rgb(252, 215, 27)'
 
 const colorSchemes = {
-	light: {
+	flashbang: {
+		id: 0,
 		outline: 'black',
 		background: 'white',
-		lineColor: 'rgb(230, 230, 230)'
+		lineColor: 'rgb(230, 230, 230)',
+		textColor: 'black',
+		wireOnColor: 'rgb(252, 215, 27)',
+		wireOffColor: 'black',
 	},
-	dark: {
-		outline: 'rgb(252, 85, 233)',
-		background: 'black',
-		lineColor: 'rgb(114, 19, 103)'
+	dracula: {
+		id: 1,
+		outline: 'hsl(323, 70%, 60%)',
+		background: 'rgb(48, 48, 48)',
+		lineColor: 'rgb(60, 60, 60)',
+		textColor: 'rgb(209, 209, 209)',
+		wireOnColor: 'rgb(249, 247, 121)',
+		wireOffColor: 'rgb(176, 135, 255)',
 	},
 }
 
-let selectedColorScheme = colorSchemes.dark
+let selectedColorScheme = colorSchemes.dracula
 
 /*
  * Functions
@@ -438,6 +447,17 @@ bsch.addEventListener("click", () => {
 bgb.addEventListener("click", () => {
 })
 
+colorSchemeToggleButton.addEventListener("click", () => {
+	if(selectedColorScheme.id == 0) {
+		selectedColorScheme = colorSchemes.dracula
+	}
+	else if(selectedColorScheme.id == 1) {
+		// TODO flashbang animation
+		selectedColorScheme = colorSchemes.flashbang
+	}
+})
+
+
 /*
  * GUI
 */
@@ -465,8 +485,9 @@ function drawObject(id) {
 	const studLen = 20
 	switch(obj.type) {
 	case WIRE:
+		ctx.strokeStyle = selectedColorScheme.wireOffColor
 		if(obj.powered)
-			ctx.strokeStyle = wireOnColor
+			ctx.strokeStyle = selectedColorScheme.wireOnColor//wireOnColor
 		leftStudPositions = []
 		rightStudPositions = []
 
@@ -502,7 +523,7 @@ function drawObject(id) {
 			ctx.strokeStyle = 'rgb(200, 200, 200)'
 		}
 		ctx.strokeStyle = selectedColorScheme.outline
-		ctx.fillStyle = 'black'
+		ctx.fillStyle = selectedColorScheme.textColor
 		ctx.font = "32px Arial";
 		ctx.fillText(obj.label, toScreenX(obj.position.x + obj.size.x / 2 - ctx.measureText(obj.label).width / 2), toScreenY(obj.position.y + obj.size.y / 2 + 10));
 		ctx.beginPath();
@@ -513,7 +534,7 @@ function drawObject(id) {
 		// Right studs
 		if(obj.invertsOutput) {
 			for(let i = 0; i < obj.output.length; i++) {
-				ctx.strokeStyle = (obj.output[i] ? wireOnColor : 'black')//'black' 
+				ctx.strokeStyle = (obj.output[i] ? selectedColorScheme.wireOnColor : selectedColorScheme.wireOffColor)//'black' 
 				let relY = (blockHeight / obj.output.length) * (i + 0.5)
 				//drawLine(obj.position.x + obj.size.x + sketchOffset.x, obj.position.y + relY + sketchOffset.y, toScreenX(obj.position.x) + obj.size.x + studLen, toScreenY(obj.position.y) + relY)
 				ctx.beginPath();
@@ -531,7 +552,7 @@ function drawObject(id) {
 			}
 		} else {
 			for(let i = 0; i < obj.output.length; i++) {
-				ctx.strokeStyle = (obj.output[i] ? wireOnColor : selectedColorScheme.outline)
+				ctx.strokeStyle = (obj.output[i] ? selectedColorSchemewireOnColor : selectedColorScheme.wireOffColor)
 				let relY = (blockHeight / obj.output.length) * (i + 0.5)
 				drawLine(obj.position.x + obj.size.x + sketchOffset.x, obj.position.y + relY + sketchOffset.y, toScreenX(obj.position.x) + obj.size.x + studLen, toScreenY(obj.position.y) + relY)
 			
@@ -547,7 +568,7 @@ function drawObject(id) {
 		}
 		// Left studs
 		for(let i = 0; i < obj.input.length; i++) {
-			ctx.strokeStyle = (obj.input[i] ? wireOnColor : 'black')
+			ctx.strokeStyle = (obj.input[i] ? selectedColorScheme.wireOnColor : selectedColorScheme.wireOffColor) 
 			ctx.beginPath()
 			let relY = (blockHeight / obj.input.length) * (i + 0.5)
 			ctx.moveTo(toScreenX(obj.position.x), toScreenY(obj.position.y) + relY)
@@ -573,7 +594,7 @@ function drawObject(id) {
 		ctx.stroke();
 		
 		// Stud
-		ctx.strokeStyle = (obj.powered ? wireOnColor : 'black')
+		ctx.strokeStyle = (obj.powered ? selectedColorSchemes.wireOnColor : 'black')
 		ctx.beginPath()
 		ctx.moveTo(toScreenX(obj.position.x) + switchRadius, toScreenY(obj.position.y))
 		ctx.lineTo(toScreenX(obj.position.x) + studLen + switchRadius, toScreenY(obj.position.y))
@@ -613,7 +634,13 @@ connectWire(79, 420)*/
 //connectWire(3, id69, 23)
 //objectMap.get(23).inIndex = 1
 
+let wireHue = 0
+
 function draw() {
+	// Regenbogen :D
+	//wireHue = (wireHue + 5) % 360
+	//selectedColorScheme.wireOnColor = `hsl(${wireHue}, 100%, 50%)`
+
 	if(!connectingWires && draggedObjectID != null) {
 		objectMap.get(draggedObjectID).position.x = (mouseX + draggedObjectMouseDiff.x) - ((mouseX + draggedObjectMouseDiff.x) % cellSize)
 		objectMap.get(draggedObjectID).position.y = (mouseY + draggedObjectMouseDiff.y) - ((mouseY + draggedObjectMouseDiff.y) % cellSize)

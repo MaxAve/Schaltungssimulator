@@ -97,3 +97,8 @@ a {
 .place-button:hover {
 	background-color: rgb(255, 251, 216);
 }
+
+.tool-button {
+	width: 64px;
+	height: 64px;
+}
