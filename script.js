@@ -285,6 +285,11 @@ function save() {
 	return JSON.stringify(objectMapObj)
 }
 
+function getDistance(x1, y1, x2, y2)
+{
+	return Math.sqrt(Math.pow(x2 - x1, 2) + Math.pow(y2 - y1, 2))
+}
+
 /*
  * Event listeners
 */
@@ -317,7 +322,7 @@ canvas.addEventListener('mousedown', (event) => {
 					draggedObjectMouseDiff.x = obj.position.x - mouseX
 					draggedObjectMouseDiff.y = obj.position.y - mouseY
 					draggingObject = true
-				} else if(obj.type == 2 && Math.sqrt(Math.pow(obj.position.x - worldMouseX, 2) + Math.pow(obj.position.y - (worldMouseY), 2)) <= switchRadius) {
+				} else if(obj.type == 2 && /*Math.sqrt(Math.pow(obj.position.x - worldMouseX, 2) + Math.pow(obj.position.y - (worldMouseY), 2))*/getDistance(obj.position.x, obj.position.y, worldMouseX, worldMouseY) <= switchRadius) {
 					draggedObjectID = key
 					draggedObjectMouseDiff.x = obj.position.x - mouseX
 					draggedObjectMouseDiff.y = obj.position.y - mouseY
@@ -332,7 +337,7 @@ canvas.addEventListener('mousedown', (event) => {
 			break
 		case 2:
 			for(let [key, obj] of objectMap) {
-				if(obj.type == 2 && Math.sqrt(Math.pow(obj.position.x - (worldMouseX), 2) + Math.pow(obj.position.y - (worldMouseY), 2)) <= switchRadius) {
+				if(obj.type == 2 && /*Math.sqrt(Math.pow(obj.position.x - (worldMouseX), 2) + Math.pow(obj.position.y - (worldMouseY), 2))*/getDistance(obj.position.x, obj.position.y, worldMouseX, worldMouseY) <= switchRadius) {
 					obj.powered = !obj.powered
 				}
 			}
@@ -485,12 +490,16 @@ function drawObject(id) {
 		// Right studs
 		if(obj.invertsOutput) {
 			for(let i = 0; i < obj.output.length; i++) {
-				ctx.strokeStyle = 'black' 
+				ctx.strokeStyle = (obj.output[i] ? wireOnColor : 'black')//'black' 
 				let relY = (blockHeight / obj.output.length) * (i + 0.5)
 				//drawLine(obj.position.x + obj.size.x + sketchOffset.x, obj.position.y + relY + sketchOffset.y, toScreenX(obj.position.x) + obj.size.x + studLen, toScreenY(obj.position.y) + relY)
 				ctx.beginPath();
-				ctx.arc(toScreenX(obj.position.x) + obj.size.x + 10, toScreenY(obj.position.y) + relY, 10, 0, 2 * Math.PI);		
+				ctx.arc(toScreenX(obj.position.x + obj.size.x + 10), toScreenY(obj.position.y + relY), 10, 0, 2 * Math.PI);		
 				ctx.stroke();
+
+				if(getDistance(toScreenX(obj.position.x + obj.size.x + 10), toScreenY(obj.position.y + relY), mouseX/*TODO*/)) {
+
+				}
 			}
 		} else {
 			for(let i = 0; i < obj.output.length; i++) {
