@@ -45,6 +45,51 @@ let draggingSketch = false
 
 let connectingWires = false
 
+let deltaTime = 0
+
+// Sprites
+class Sprite {
+	constructor(imagePath) {
+		this.hidden = false
+		this.position = {x: 0, y: 0}
+		this.scale = {x: 1, y: 1}
+		this.image = new Image()
+		this.image.src = imagePath
+		this.velocity = {x: 0, y: 0, rotation: 0}
+		this.acceleration = {x: 0, y: 0, rotation: 0}
+		this.rotation = 0
+	}
+
+	draw() {
+		if(!this.hidden) {
+			ctx.save()
+			ctx.translate(this.position.x, this.position.y)
+			ctx.rotate(this.rotation)
+			ctx.drawImage(this.image, -this.image.width * this.scale.x / 2, -this.image.width * this.scale.y, this.image.width * this.scale.x, this.image.height * this.scale.y)
+			ctx.restore()
+		}
+	}
+
+	update() {
+		this.position.x        += this.velocity.x * deltaTime / 1000
+		this.position.y        += this.velocity.y * deltaTime / 1000
+		this.rotation          += this.velocity.rotation * deltaTime / 1000
+		this.velocity.x        += this.acceleration.x * deltaTime / 1000
+		this.velocity.y        += this.acceleration.y * deltaTime / 1000
+		this.velocity.rotation += this.acceleration.rotation * deltaTime / 1000
+	}
+}
+
+const flashbangSprite = new Sprite('assets/flashbang.png')
+flashbangSprite.hidden = true
+flashbangSprite.scale.x = 0.4
+flashbangSprite.scale.y = 0.4
+
+/*const flashbangImage = new Image()
+flashbangImage.src = 'assets/flashbang.png'
+let flashbangPosition = {x: 0, y: 0}
+let showFlashbang = false;*/
+
 //wireOnColor = 'rgb(252, 215, 27)'
 
 const colorSchemes = {
@@ -452,7 +497,15 @@ colorSchemeToggleButton.addEventListener("click", () => {
 		selectedColorScheme = colorSchemes.dracula
 	}
 	else if(selectedColorScheme.id == 1) {
-		// TODO flashbang animation
+		flashbangSprite.hidden = false
+		flashbangSprite.position.x = -100
+		flashbangSprite.position.y = 0
+		flashbangSprite.velocity.x = 800
+		flashbangSprite.velocity.rotation = 15
+		flashbangSprite.acceleration.x = -200
+		flashbangSprite.acceleration.y = 3000
+		flashbangSprite.acceleration.rotation = -3.65
+		
 		selectedColorScheme = colorSchemes.flashbang
 	}
 })
@@ -636,7 +689,11 @@ connectWire(79, 420)*/
 
 let wireHue = 0
 
+let lastExecution = new Date().getTime()
+
 function draw() {
+	deltaTime = new Date().getTime() - lastExecution
+	
 	// Regenbogen :D
 	//wireHue = (wireHue + 5) % 360
 	//selectedColorScheme.wireOnColor = `hsl(${wireHue}, 100%, 50%)`
@@ -645,6 +702,23 @@ function draw() {
 		objectMap.get(draggedObjectID).position.x = (mouseX + draggedObjectMouseDiff.x) - ((mouseX + draggedObjectMouseDiff.x) % cellSize)
 		objectMap.get(draggedObjectID).position.y = (mouseY + draggedObjectMouseDiff.y) - ((mouseY + draggedObjectMouseDiff.y) % cellSize)
 	}
+
+	// Update sprites
+	if(flashbangSprite.position.y > canvas.height - 50) {
+		flashbangSprite.velocity.y = -Math.abs(flashbangSprite.velocity.y * 0.65)
+		if(flashbangSprite.velocity.y > -200) {
+			flashbangSprite.velocity.y = 0
+		}
+	}
+	if(flashbangSprite.velocity.x < 0) {
+		flashbangSprite.acceleration.x = 0
+		flashbangSprite.velocity.x = 0 
+	}
+	if(flashbangSprite.velocity.rotation < 0) {
+		flashbangSprite.velocity.rotation = 0
+		flashbangSprite.acceleration.rotation = 0
+	}
+	flashbangSprite.update()
 
     ctx.clearRect(0, 0, canvas.width, canvas.height)
 
@@ -681,7 +755,11 @@ function draw() {
 	updateAllOfType(BLOCK)
 		
 	sketchName = document.getElementById("name").value
+	
+	// Render sprites
+	flashbangSprite.draw()
 
+	lastExecution = new Date().getTime()
 	requestAnimationFrame(draw);
 }
 
