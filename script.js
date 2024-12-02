@@ -84,6 +84,7 @@ const flashbangSprite = new Sprite('assets/flashbang.png')
 flashbangSprite.hidden = true
 flashbangSprite.scale.x = 0.4
 flashbangSprite.scale.y = 0.4
+let grenadeLanded = false
 
 /*const flashbangImage = new Image()
 flashbangImage.src = 'assets/flashbang.png'
@@ -493,6 +494,7 @@ bgb.addEventListener("click", () => {
 })
 
 colorSchemeToggleButton.addEventListener("click", () => {
+	flashbangSprite.hidden = true
 	if(selectedColorScheme.id == 0) {
 		selectedColorScheme = colorSchemes.dracula
 	}
@@ -502,14 +504,14 @@ colorSchemeToggleButton.addEventListener("click", () => {
 		flashbangSprite.position.y = 0
 		flashbangSprite.velocity.x = 800
 		flashbangSprite.velocity.rotation = 15
-		flashbangSprite.acceleration.x = -200
+		flashbangSprite.acceleration.x = -300
 		flashbangSprite.acceleration.y = 3000
-		flashbangSprite.acceleration.rotation = -3.65
+		flashbangSprite.acceleration.rotation = -6
+		grenadeLanded = false
 		
-		selectedColorScheme = colorSchemes.flashbang
+		//selectedColorScheme = colorSchemes.flashbang
 	}
 })
-
 
 /*
  * GUI
@@ -691,8 +693,14 @@ let wireHue = 0
 
 let lastExecution = new Date().getTime()
 
+let flashAlpha = 0
+
 function draw() {
 	deltaTime = new Date().getTime() - lastExecution
+
+	if(flashAlpha > 0) {
+		flashAlpha -= 0.008
+	}
 	
 	// Regenbogen :D
 	//wireHue = (wireHue + 5) % 360
@@ -708,8 +716,18 @@ function draw() {
 		flashbangSprite.velocity.y = -Math.abs(flashbangSprite.velocity.y * 0.65)
 		if(flashbangSprite.velocity.y > -200) {
 			flashbangSprite.velocity.y = 0
+			
+			if(!grenadeLanded) {
+				grenadeLanded = true
+				setTimeout(function() {
+					flashAlpha = 1.8
+					selectedColorScheme = colorSchemes.flashbang
+					flashbangSprite.hidden = true
+				}, 2000)
+			}
 		}
 	}
+
 	if(flashbangSprite.velocity.x < 0) {
 		flashbangSprite.acceleration.x = 0
 		flashbangSprite.velocity.x = 0 
@@ -758,6 +776,9 @@ function draw() {
 	
 	// Render sprites
 	flashbangSprite.draw()
+
+	ctx.fillStyle = `rgb(255, 255, 255, ${flashAlpha})`
+	ctx.fillRect(0, 0, canvas.width, canvas.height)
 
 	lastExecution = new Date().getTime()
 	requestAnimationFrame(draw);
