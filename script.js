@@ -17,7 +17,9 @@ let draggedObjectMouseDiff = {x: 0, y: 0}
 let downloadButton = document.querySelector("#download-button")
 let renameButton = document.querySelector("#rename-button")
 let uploadConfirmButton = document.querySelector("#upload-button")
-let colorSchemeToggleButton = document.querySelector("#color-scheme-toggle")
+//let colorSchemeToggleButton = document.querySelector("#color-scheme-toggle")
+let colorSchemeSelection = document.querySelector("#colorscheme")
+colorSchemeSelection.value = '1'
 
 let bnot = document.querySelector("#bnot")
 let band = document.querySelector("#band")
@@ -102,6 +104,10 @@ const colorSchemes = {
 		textColor: 'black',
 		wireOnColor: 'rgb(252, 215, 27)',
 		wireOffColor: 'black',
+		menuBackground: 'rgb(245, 245, 245)',
+		menuTextColor: 'black',
+		buttonColor: 'rgb(225, 225, 225)',
+		borderColor: 'rgb(160, 160, 160)',
 	},
 	dracula: {
 		id: 1,
@@ -111,10 +117,57 @@ const colorSchemes = {
 		textColor: 'rgb(209, 209, 209)',
 		wireOnColor: 'rgb(249, 247, 121)',
 		wireOffColor: 'rgb(176, 135, 255)',
+		menuBackground: 'rgb(30, 30, 30)',
+		menuTextColor: 'white',
+		buttonColor: 'rgb(48, 48, 48)',
+		borderColor: 'rgb(80, 80, 80)',
+	},
+	bnw: {
+		id: 2,
+	},
+	chalkboard: {
+		id: 3,
+	},
+	blueprint: {
+		id: 4,
 	},
 }
 
 let selectedColorScheme = colorSchemes.dracula
+
+let menuMenu = document.querySelector("#menu")
+
+function updateMenu() {
+	function processElement(element) {
+		const tag    = element.tagName
+		const id     = element.id
+		const _class = element.className
+	
+		element.style.setProperty('border-color', selectedColorScheme.borderColor)
+
+		if(id == 'menu') {
+			element.style.setProperty('background-color', selectedColorScheme.menuBackground)
+		}
+		if(tag == 'P' || tag == 'LABEL' || tag == 'INPUT') {
+			element.style.setProperty('color', selectedColorScheme.menuTextColor)
+		}
+		if(_class != 'file-input' && (tag == 'INPUT' || id == 'item-select' || tag == 'BUTTON' || tag == 'SELECT' || tag == 'OPTION')) {
+			element.style.setProperty('background-color', selectedColorScheme.background)
+			element.style.setProperty('color', selectedColorScheme.menuTextColor)
+		}
+		if((tag == 'BUTTON' || tag == 'INPUT' || tag == 'SELECT') && _class != 'object-place' && _class != 'file-input') {
+			element.style.setProperty('background-color', selectedColorScheme.buttonColor)
+		}
+
+        for (let child of element.children) {
+            processElement(child);
+        }
+    }
+
+    processElement(document.documentElement);
+}
+
+updateMenu()
 
 /*
  * Functions
@@ -493,7 +546,44 @@ bsch.addEventListener("click", () => {
 bgb.addEventListener("click", () => {
 })
 
-colorSchemeToggleButton.addEventListener("click", () => {
+let lastSelected = '1'
+
+colorSchemeSelection.addEventListener("click", () => {
+	let selected = colorSchemeSelection.options[colorSchemeSelection.selectedIndex].value
+	if(selected != lastSelected) {
+		if(selected != '0') {
+			switch(parseInt(selected)) {
+				case 1:
+					selectedColorScheme = colorSchemes.dracula
+					break
+				case 2:
+					selectedColorScheme = colorSchemes.bnw
+					break
+				case 3:
+					selectedColorScheme = colorSchemes.chalkboard
+					break
+				case 4:
+					selectedColorScheme = colorSchemes.blueprint
+					break
+			}
+		} else {
+			flashbangSprite.hidden = false
+			flashbangSprite.position.x = -100
+			flashbangSprite.position.y = 0
+			flashbangSprite.velocity.x = 800
+			flashbangSprite.velocity.rotation = 15
+			flashbangSprite.acceleration.x = -300
+			flashbangSprite.acceleration.y = 3000
+			flashbangSprite.acceleration.rotation = -(Math.floor(Math.random() % 100) + 500) / 100
+			grenadeLanded = false
+		}
+		updateMenu()
+	}
+	lastSelected = selected
+})
+
+
+/*colorSchemeToggleButton.addEventListener("click", () => {
 	flashbangSprite.hidden = true
 	if(selectedColorScheme.id == 0) {
 		selectedColorScheme = colorSchemes.dracula
@@ -506,12 +596,12 @@ colorSchemeToggleButton.addEventListener("click", () => {
 		flashbangSprite.velocity.rotation = 15
 		flashbangSprite.acceleration.x = -300
 		flashbangSprite.acceleration.y = 3000
-		flashbangSprite.acceleration.rotation = -6
+		flashbangSprite.acceleration.rotation = -(Math.floor(Math.random() % 100) + 500) / 100
 		grenadeLanded = false
 		
 		//selectedColorScheme = colorSchemes.flashbang
 	}
-})
+})*/
 
 /*
  * GUI
@@ -720,9 +810,12 @@ function draw() {
 			if(!grenadeLanded) {
 				grenadeLanded = true
 				setTimeout(function() {
+					let audio = new Audio('assets/flashbanggg.mp3');
+					audio.play();
 					flashAlpha = 1.8
 					selectedColorScheme = colorSchemes.flashbang
 					flashbangSprite.hidden = true
+					updateMenu()
 				}, 2000)
 			}
 		}

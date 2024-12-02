@@ -15,6 +15,28 @@ p {
 	margin-bottom: 5px;
 }
 
+a {
+	font-family: Arial;
+}
+
+canvas {
+	width: 100%;
+	height: 100%;
+	display: block;
+}
+
+label {
+	font-family: Arial;
+	color: black;
+}
+
+select {
+	width: 280px;
+	height: 30px;
+	margin-bottom: 10px;
+	text-align: center;
+}
+
 #menu {
 	width: 340px; 
 	background-color: rgb(245, 245, 245);
@@ -26,18 +48,13 @@ p {
 	align-items: center;
 	padding-top: 1rem;
 }
+
 #canvas-container {
 	width: auto;
 	height: 100%;
 	border: 1px;
 	border-style: solid;
 	border-color: rgb(120, 120, 120);
-}
-
-canvas {
-	width: 100%;
-	height: 100%;
-	display: block;
 }
 
 .menuButtonWide {
@@ -77,10 +94,6 @@ canvas {
     overflow-y: auto;
 }
 
-a {
-	font-family: Arial;
-}
-
 .object-place {
 	width: 150px;
 	height: auto;
@@ -95,7 +108,10 @@ a {
 }
 
 .place-button:hover {
-	background-color: rgb(255, 251, 216);
+	border: 2px;
+	border-style: solid;
+	margin-bottom: -2px;
+	margin-top: -2px;
 }
 
 .tool-button {
