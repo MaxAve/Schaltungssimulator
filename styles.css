@@ -2,21 +2,23 @@
 	margin: 0;
 	padding: 0;
 	box-sizing: border-box;
+	font-family: Consolas, Menlo, Monaco, Lucida Console, Liberation Mono, DejaVu Sans Mono, Bitstream Vera Sans Mono, Courier New, monospace, serif;
 }
 
 body {
 	display: flex;
 	height: 100vh;
+	text-align: center;
 }
 
 p {
 	color: black;
-	font-family: Arial;
+	font-family: Consolas, Menlo, Monaco, Lucida Console, Liberation Mono, DejaVu Sans Mono, Bitstream Vera Sans Mono, Courier New, monospace, serif;
 	margin-bottom: 5px;
 }
 
 a {
-	font-family: Arial;
+	font-family: Consolas, Menlo, Monaco, Lucida Console, Liberation Mono, DejaVu Sans Mono, Bitstream Vera Sans Mono, Courier New, monospace, serif;
 }
 
 canvas {
@@ -26,7 +28,7 @@ canvas {
 }
 
 label {
-	font-family: Arial;
+	font-family: Consolas, Menlo, Monaco, Lucida Console, Liberation Mono, DejaVu Sans Mono, Bitstream Vera Sans Mono, Courier New, monospace, serif;
 	color: black;
 }
 
@@ -50,6 +52,7 @@ select {
 }
 
 button, select {
+	text-align: center;
 	border: 0px;
 	border-style: solid;
 	border-color: rgb(100, 100, 100);
@@ -61,6 +64,7 @@ button:hover, select:hover {
 	border-style: solid;
 	border-color: rgb(100, 100, 100);
 	border-radius: 15px;
+	cursor:	pointer;
 }
 
 #canvas-container {
@@ -98,8 +102,8 @@ button:hover, select:hover {
 }
 
 #item-select {
-	margin-top: 25px;
-	margin-bottom: 25px;
+	margin-top: 0px;
+	margin-bottom: 10px;
 	background-color: white;
 	width: 280px;
 	height: calc(100vh - 480px);
@@ -121,13 +125,14 @@ button:hover, select:hover {
 .object-label {
 	margin-top: 0px;
 	margin-bottom: 25px;
-	font-family: Arial;
+	font-family: Consolas, Menlo, Monaco, Lucida Console, Liberation Mono, DejaVu Sans Mono, Bitstream Vera Sans Mono, Courier New, monospace, serif;
 	font-size: 20px;
 }
 
 .place-button {
 	margin-left: 40px;
 	margin-right: 40px;
+	text-align: center;
 }
 
 .place-button:hover {
