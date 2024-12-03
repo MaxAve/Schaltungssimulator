@@ -50,7 +50,7 @@ select {
 }
 
 button, select {
-	border: 1px;
+	border: 0px;
 	border-style: solid;
 	border-color: rgb(100, 100, 100);
 	border-radius: 15px;
@@ -59,14 +59,14 @@ button, select {
 button:hover, select:hover {
 	border: 1px;
 	border-style: solid;
-	border-color: red;
+	border-color: rgb(100, 100, 100);
 	border-radius: 15px;
 }
 
 #canvas-container {
 	width: auto;
 	height: 100%;
-	border: 1px;
+	border: 0px;
 	border-style: solid;
 	border-color: rgb(120, 120, 120);
 }
@@ -82,9 +82,10 @@ button:hover, select:hover {
 	height: 30px;
 	margin-bottom: 10px;
 	padding-left: 10px;
-	border: 1px;
+	border: 0px;
 	border-style: solid;
 	border-color: rgb(100, 100, 100);
+	border-radius: 15px;
 }
 
 .with-margin {
@@ -101,8 +102,8 @@ button:hover, select:hover {
 	margin-bottom: 25px;
 	background-color: white;
 	width: 280px;
-	height: calc(100vh - 450px);
-	border: 1px;
+	height: calc(100vh - 480px);
+	border: 0px;
 	border-style: solid;
 	border-color: rgb(120, 120, 120);
 	text-align: center;
@@ -122,6 +123,11 @@ button:hover, select:hover {
 	margin-bottom: 25px;
 	font-family: Arial;
 	font-size: 20px;
+}
+
+.place-button {
+	margin-left: 40px;
+	margin-right: 40px;
 }
 
 .place-button:hover {
