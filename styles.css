@@ -49,6 +49,20 @@ select {
 	padding-top: 1rem;
 }
 
+button, select {
+	border: 1px;
+	border-style: solid;
+	border-color: rgb(100, 100, 100);
+	border-radius: 15px;
+}
+
+button:hover, select:hover {
+	border: 1px;
+	border-style: solid;
+	border-color: red;
+	border-radius: 15px;
+}
+
 #canvas-container {
 	width: auto;
 	height: 100%;
@@ -68,6 +82,9 @@ select {
 	height: 30px;
 	margin-bottom: 10px;
 	padding-left: 10px;
+	border: 1px;
+	border-style: solid;
+	border-color: rgb(100, 100, 100);
 }
 
 .with-margin {
@@ -108,10 +125,10 @@ select {
 }
 
 .place-button:hover {
-	border: 2px;
+	border: 1px;
 	border-style: solid;
-	margin-bottom: -2px;
-	margin-top: -2px;
+	margin-bottom: -1px;
+	margin-top: -1px;
 }
 
 .tool-button {

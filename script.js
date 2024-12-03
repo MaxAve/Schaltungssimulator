@@ -143,7 +143,7 @@ function updateMenu() {
 		const id     = element.id
 		const _class = element.className
 	
-		element.style.setProperty('border-color', selectedColorScheme.borderColor)
+		//element.style.setProperty('border-color', selectedColorScheme.borderColor)
 
 		if(id == 'menu') {
 			element.style.setProperty('background-color', selectedColorScheme.menuBackground)
