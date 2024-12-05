@@ -106,7 +106,7 @@ button:hover, select:hover {
 	margin-bottom: 10px;
 	background-color: white;
 	width: 280px;
-	height: calc(100vh - 480px);
+	height: calc(100vh - 350px);
 	border: 0px;
 	border-style: solid;
 	border-color: rgb(120, 120, 120);
@@ -145,4 +145,15 @@ button:hover, select:hover {
 .tool-button {
 	width: 64px;
 	height: 64px;
+}
+
+.tool-button {
+	width: 60px;
+	height: 60px;
+	margin-bottom: 10px;
+}
+
+.logo {
+	width: 40px;
+	height: auto;
 }

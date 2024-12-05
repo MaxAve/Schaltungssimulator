@@ -11,12 +11,22 @@
 		<canvas id="myCanvas"></canvas>
 	</div>
 	<div id="menu">
-		<p>Neue Skizze erstellen</p>
+		<!--<p>Neue Skizze erstellen</p>-->
     	<input type="text" value="Neue Schaltung" class="menu-text-input" id="name" name="name">
-		<button class="menuButtonWide" id="download-button">Skizze Herunterladen</button>
-		<p>... oder eine bereite Skizze hochladen</p>
+		<p class="with-margin">Farbschema</p>
+		<select id="colorscheme" name="colorscheme">
+			<option value="2">Schwarz-Weiß</option>
+			<option value="1">Dracula</option>
+			<option value="3">Tafel</option>
+			<option value="4">Blueprint</option>
+			<option value="0">Hell</option>
+		</select>
+		<!--<button class="menuButtonWide" id="download-button">Skizze Herunterladen</button>
+		<p>Bereite Skizze hochladen</p>
+		<button class="menuButtonWide" id="upload-button">Datei auswählen</button>
 		<input class="file-input" type="file" name="file-upload" id="file-upload">
-		<button class="menuButtonWide" id="upload-button">Hochladen und Öffnen</button>
+		<button class="menuButtonWide" id="upload-button">Hochladen und Öffnen</button>-->
+		<p class="with-margin">Gatter</p>
 		<div id="item-select">
 			<div class="place-button">
 				<input class="object-place" type="image" src="assets/not.png" id="bnot"/>
@@ -59,16 +69,24 @@
 				<p class="object-label">Glühbirne</p>
 			</div>
 		</div>
-		<button class="menuButtonWide" id="table-gen-button">Wahrheitstabelle anzeigen</button>
+		<!--<button class="menuButtonWide" id="table-gen-button">Wahrheitstabelle anzeigen</button>-->
 		<!--<label for="colorscheme">Farbschema</label>-->
-		<p>Farbschema</p>
-		<select id="colorscheme" name="colorscheme">
-			<option value="2">Schwarz-Weiß</option>
-			<option value="1">Dracula</option>
-			<option value="3">Tafel</option>
-			<option value="4">Blueprint</option>
-			<option value="0">Hell</option>
-		</select>
+
+		<p class="with-margin">Tools</p>
+		<div align="right">
+			<button title="Mauszeiger-Tool" class="tool-button" id="cursor-button" type="image">
+				<img class="logo" src="assets/cursor.png", alt="Mouse">
+			</button>
+			<button title="Lösch-Tool" class="tool-button" id="delete-button" type="image">
+				<img class="logo" src="assets/trash.png", alt="Delete">
+			</button>
+			<button title="Herunterladen" class="tool-button" id="download-button" type="image">
+				<img class="logo" src="assets/download.png", alt="Download">
+			</button>
+			<button title="Nicht LSD" class="tool-button" id="rainbow-button" type="image">
+				<img class="logo" src="assets/rainbow.png", alt="Rainbow">
+			</button>
+		</div>
 		<!--<a href="https://github.com/MaxAve/" target="_blank">Mein GitHub</a>-->
 	</div>
 	<script src="script.js"></script>

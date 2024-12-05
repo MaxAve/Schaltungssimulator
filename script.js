@@ -17,8 +17,8 @@ let draggedObjectMouseDiff = {x: 0, y: 0}
 let downloadButton = document.querySelector("#download-button")
 let renameButton = document.querySelector("#rename-button")
 let uploadConfirmButton = document.querySelector("#upload-button")
-//let colorSchemeToggleButton = document.querySelector("#color-scheme-toggle")
 let colorSchemeSelection = document.querySelector("#colorscheme")
+let rainbowToggle = document.querySelector("#rainbow-button")
 colorSchemeSelection.value = '1'
 
 let bnot = document.querySelector("#bnot")
@@ -48,6 +48,10 @@ let draggingSketch = false
 let connectingWires = false
 
 let deltaTime = 0
+
+let wireHue = 0
+
+let rainbow = false
 
 // Sprites
 class Sprite {
@@ -88,18 +92,13 @@ flashbangSprite.scale.x = 0.4
 flashbangSprite.scale.y = 0.4
 let grenadeLanded = false
 
-/*const flashbangImage = new Image()
-flashbangImage.src = 'assets/flashbang.png'
-let flashbangPosition = {x: 0, y: 0}
-let showFlashbang = false;*/
-
-//wireOnColor = 'rgb(252, 215, 27)'
-
 const colorSchemes = {
 	flashbang: {
 		id: 0,
 		outline: 'black',
+		dragOutline: 'rgb(252, 215, 27)',
 		background: 'white',
+		gateBackground: 'rgb(240, 240, 240)',
 		lineColor: 'rgb(230, 230, 230)',
 		textColor: 'black',
 		wireOnColor: 'rgb(252, 215, 27)',
@@ -108,22 +107,39 @@ const colorSchemes = {
 		menuTextColor: 'black',
 		buttonColor: 'rgb(225, 225, 225)',
 		borderColor: 'rgb(160, 160, 160)',
+		dotted: false,
 	},
 	dracula: {
 		id: 1,
 		outline: 'hsl(323, 70%, 60%)',
+		dragOutline: 'white',
 		background: 'rgb(48, 48, 48)',
-		lineColor: 'rgb(60, 60, 60)',
-		textColor: 'rgb(209, 209, 209)',
+		gateBackground: 'rgb(38, 38, 38)',
+		lineColor: 'rgb(70, 70, 70)',
+		textColor: 'white',
 		wireOnColor: 'rgb(249, 247, 121)',
 		wireOffColor: 'rgb(176, 135, 255)',
 		menuBackground: 'rgb(30, 30, 30)',
 		menuTextColor: 'white',
 		buttonColor: 'rgb(48, 48, 48)',
 		borderColor: 'rgb(80, 80, 80)',
+		dotted: true,
 	},
 	bnw: {
 		id: 2,
+		outline: 'white',
+		dragOutline: 'rgb(150, 150, 150)',
+		background: 'black',
+		gateBackground: 'black',
+		lineColor: 'rgb(40, 40, 40)',
+		textColor: 'white',
+		wireOnColor: 'white',
+		wireOffColor: 'rgb(100, 100, 100)',
+		menuBackground: 'rgb(15, 15, 15)',
+		menuTextColor: 'white',
+		buttonColor: 'rgb(50, 50, 50)',
+		borderColor: 'rgb(80, 80, 80)',
+		dotted: true,
 	},
 	chalkboard: {
 		id: 3,
@@ -503,10 +519,14 @@ downloadButton.addEventListener("click", () => {
     anele.click();
 })
 
-uploadConfirmButton.addEventListener("click", () => {
+/*uploadConfirmButton.addEventListener("click", () => {
 	if(confirm('Achtung: beim hochladen wird die jetzige Skizze gelöscht!')) {
 		console.log('TODO: Upload file')
 	}
+})*/
+
+rainbowToggle.addEventListener("click", () => {
+	rainbow = !rainbow
 })
 
 bnot.addEventListener("click", () => {
@@ -582,27 +602,6 @@ colorSchemeSelection.addEventListener("click", () => {
 	lastSelected = selected
 })
 
-
-/*colorSchemeToggleButton.addEventListener("click", () => {
-	flashbangSprite.hidden = true
-	if(selectedColorScheme.id == 0) {
-		selectedColorScheme = colorSchemes.dracula
-	}
-	else if(selectedColorScheme.id == 1) {
-		flashbangSprite.hidden = false
-		flashbangSprite.position.x = -100
-		flashbangSprite.position.y = 0
-		flashbangSprite.velocity.x = 800
-		flashbangSprite.velocity.rotation = 15
-		flashbangSprite.acceleration.x = -300
-		flashbangSprite.acceleration.y = 3000
-		flashbangSprite.acceleration.rotation = -(Math.floor(Math.random() % 100) + 500) / 100
-		grenadeLanded = false
-		
-		//selectedColorScheme = colorSchemes.flashbang
-	}
-})*/
-
 /*
  * GUI
 */
@@ -625,14 +624,18 @@ function drawWire(x1, y1, x2, y2) {
 
 function drawObject(id) {
 	const obj = objectMap.get(id)
-	ctx.lineWidth = 3
+	ctx.lineWidth = 2
 	ctx.strokeStyle = selectedColorScheme.outline
 	const studLen = 20
 	switch(obj.type) {
 	case WIRE:
 		ctx.strokeStyle = selectedColorScheme.wireOffColor
-		if(obj.powered)
+		if(obj.powered) {
+			if(rainbow) {
+				ctx.strokeStyle = `hsl(${wireHue}, 100%, 50%)`
+			}
 			ctx.strokeStyle = selectedColorScheme.wireOnColor//wireOnColor
+		}
 		leftStudPositions = []
 		rightStudPositions = []
 
@@ -660,26 +663,26 @@ function drawObject(id) {
 		drawWire(toScreenX(fromPos[0]), toScreenY(fromPos[1]), toScreenX(toPos[0]), toScreenY(toPos[1]))
 		break
 	case BLOCK:	
-		ctx.fillStyle = selectedColorScheme.background
+		ctx.fillStyle = selectedColorScheme.gateBackground
 		const blockWidth = obj.size.x
 		const blockHeight = obj.isSquare ? obj.size.x : obj.size.y
 		ctx.fillRect(toScreenX(obj.position.x), toScreenY(obj.position.y), blockWidth, blockHeight)
-		if(id == draggedObjectID && !connectingWires) {
-			ctx.strokeStyle = 'rgb(200, 200, 200)'
-		}
 		ctx.strokeStyle = selectedColorScheme.outline
 		ctx.fillStyle = selectedColorScheme.textColor
 		ctx.font = "32px Arial";
 		ctx.fillText(obj.label, toScreenX(obj.position.x + obj.size.x / 2 - ctx.measureText(obj.label).width / 2), toScreenY(obj.position.y + obj.size.y / 2 + 10));
-		ctx.beginPath();
-		ctx.rect(toScreenX(obj.position.x), toScreenY(obj.position.y), blockWidth, blockHeight);
-		ctx.stroke()
+		//ctx.beginPath();
+		//ctx.rect(toScreenX(obj.position.x), toScreenY(obj.position.y), blockWidth, blockHeight);
+		//ctx.stroke()
 
 		//TODO objects will be dragged and cancels wire connection; pls fix
 		// Right studs
 		if(obj.invertsOutput) {
 			for(let i = 0; i < obj.output.length; i++) {
 				ctx.strokeStyle = (obj.output[i] ? selectedColorScheme.wireOnColor : selectedColorScheme.wireOffColor)//'black' 
+				if(obj.output[i] && rainbow) {
+					ctx.strokeStyle = `hsl(${wireHue}, 100%, 50%)`
+				}
 				let relY = (blockHeight / obj.output.length) * (i + 0.5)
 				//drawLine(obj.position.x + obj.size.x + sketchOffset.x, obj.position.y + relY + sketchOffset.y, toScreenX(obj.position.x) + obj.size.x + studLen, toScreenY(obj.position.y) + relY)
 				ctx.beginPath();
@@ -698,6 +701,9 @@ function drawObject(id) {
 		} else {
 			for(let i = 0; i < obj.output.length; i++) {
 				ctx.strokeStyle = (obj.output[i] ? selectedColorSchemewireOnColor : selectedColorScheme.wireOffColor)
+				if(obj.output[i] && rainbow) {
+					ctx.strokeStyle = `hsl(${wireHue}, 100%, 50%)`
+				}
 				let relY = (blockHeight / obj.output.length) * (i + 0.5)
 				drawLine(obj.position.x + obj.size.x + sketchOffset.x, obj.position.y + relY + sketchOffset.y, toScreenX(obj.position.x) + obj.size.x + studLen, toScreenY(obj.position.y) + relY)
 			
@@ -714,6 +720,9 @@ function drawObject(id) {
 		// Left studs
 		for(let i = 0; i < obj.input.length; i++) {
 			ctx.strokeStyle = (obj.input[i] ? selectedColorScheme.wireOnColor : selectedColorScheme.wireOffColor) 
+			if(obj.input[i] && rainbow) {
+				ctx.strokeStyle = `hsl(${wireHue}, 100%, 50%)`
+			}
 			ctx.beginPath()
 			let relY = (blockHeight / obj.input.length) * (i + 0.5)
 			ctx.moveTo(toScreenX(obj.position.x), toScreenY(obj.position.y) + relY)
@@ -729,14 +738,24 @@ function drawObject(id) {
 				ctx.strokeStyle = "black"
 			}
 		}
+
+		if(id == draggedObjectID && !connectingWires) {
+			ctx.strokeStyle = selectedColorScheme.dragOutline
+		} else {
+			ctx.strokeStyle = selectedColorScheme.outline
+		}
+		ctx.fillStyle = selectedColorScheme.textColor
+		ctx.beginPath();
+		ctx.rect(toScreenX(obj.position.x), toScreenY(obj.position.y), blockWidth, blockHeight);
+		ctx.stroke()
 		break
 	case SWITCH:
-		ctx.beginPath();
-		ctx.arc(toScreenX(obj.position.x), toScreenY(obj.position.y), switchRadius, 0, 2 * Math.PI);
-		ctx.fillStyle = (obj.powered ? "red" : 'rgb(200, 200, 200)');
-		ctx.fill();
-		ctx.strokeStyle = "black";
-		ctx.stroke();
+		ctx.beginPath()
+		ctx.arc(toScreenX(obj.position.x), toScreenY(obj.position.y), switchRadius, 0, 2 * Math.PI)
+		ctx.fillStyle = (obj.powered ? "red" : 'rgb(200, 200, 200)')
+		ctx.fill()
+		ctx.strokeStyle = "black"
+		ctx.stroke()
 		
 		// Stud
 		ctx.strokeStyle = (obj.powered ? selectedColorSchemes.wireOnColor : 'black')
@@ -779,22 +798,18 @@ connectWire(79, 420)*/
 //connectWire(3, id69, 23)
 //objectMap.get(23).inIndex = 1
 
-let wireHue = 0
-
 let lastExecution = new Date().getTime()
 
 let flashAlpha = 0
 
 function draw() {
 	deltaTime = new Date().getTime() - lastExecution
+	
+	wireHue = (wireHue + 5) % 360
 
 	if(flashAlpha > 0) {
 		flashAlpha -= 0.008
 	}
-	
-	// Regenbogen :D
-	//wireHue = (wireHue + 5) % 360
-	//selectedColorScheme.wireOnColor = `hsl(${wireHue}, 100%, 50%)`
 
 	if(!connectingWires && draggedObjectID != null) {
 		objectMap.get(draggedObjectID).position.x = (mouseX + draggedObjectMouseDiff.x) - ((mouseX + draggedObjectMouseDiff.x) % cellSize)
@@ -837,26 +852,37 @@ function draw() {
 	ctx.fillRect(0, 0, canvas.width, canvas.height)
 
 	// Background lines
-	//ctx.strokeStyle = "rgb(230, 230, 230)"
 	ctx.strokeStyle = selectedColorScheme.lineColor
-	ctx.lineWidth = 1
-	for(let i = 0; i <= canvas.width; i += cellSize) {
-		ctx.beginPath()
-		ctx.moveTo(i + (sketchOffset.x % cellSize), (sketchOffset.y % cellSize) - 100)
-		ctx.lineTo(i + (sketchOffset.x % cellSize), canvas.height + (sketchOffset.y % cellSize) + 100)
-		ctx.stroke()
-	}
-	for(let i = 0; i <= canvas.height; i += cellSize) {
-		ctx.beginPath()
-		ctx.moveTo(sketchOffset.x % cellSize - 100, i + (sketchOffset.y % cellSize))
-		ctx.lineTo(canvas.width + (sketchOffset.x % cellSize) + 100, i + (sketchOffset.y % cellSize))
-		ctx.stroke()
+	if(selectedColorScheme.dotted) {
+		for(let i = -2 * cellSize; i <= canvas.width + cellSize; i += cellSize) {
+			for(let j = -2 * cellSize; j <= canvas.height + 2 * cellSize; j += cellSize) {
+				ctx.beginPath()
+				ctx.arc(i + (sketchOffset.x % cellSize), j + (sketchOffset.y % cellSize), 2, 0, 2 * Math.PI)
+				ctx.fillStyle = selectedColorScheme.lineColor
+				ctx.fill()
+			}
+		}
+
+	} else {
+		ctx.lineWidth = 1
+		for(let i = -2 * cellSize; i <= canvas.width + 2 * cellSize; i += cellSize) {
+			ctx.beginPath()
+			ctx.moveTo(i + (sketchOffset.x % cellSize), (sketchOffset.y % cellSize) - 100)
+			ctx.lineTo(i + (sketchOffset.x % cellSize), canvas.height + (sketchOffset.y % cellSize) + 100)
+			ctx.stroke()
+		}
+		for(let i = -2 * cellSize; i <= canvas.height + 2 * cellSize; i += cellSize) {
+			ctx.beginPath()
+			ctx.moveTo(sketchOffset.x % cellSize - 100, i + (sketchOffset.y % cellSize))
+			ctx.lineTo(canvas.width + (sketchOffset.x % cellSize) + 100, i + (sketchOffset.y % cellSize))
+			ctx.stroke()
+		}
 	}
 
 	for(let [key, obj] of objectMap) {
 		drawObject(key)
 		if(obj.type == BLOCK) {
-			for(let i = 0; i < obj.input.length; i++) {
+				for(let i = 0; i < obj.input.length; i++) {
 				obj.input[i] = false
 			}
 		}
