@@ -53,6 +53,12 @@ let wireHue = 0
 
 let rainbow = false
 
+let wireConnectFromHoverID = null
+let wireConnectFromID = null
+let wireConnectFromIndex = null
+let wireConnectToHoverID = null
+const wireFromPosition = {x: 0, x: 0}
+
 // Sprites
 class Sprite {
 	constructor(imagePath) {
@@ -118,7 +124,7 @@ const colorSchemes = {
 		lineColor: 'rgb(70, 70, 70)',
 		textColor: 'white',
 		wireOnColor: 'rgb(249, 247, 121)',
-		wireOffColor: 'rgb(176, 135, 255)',
+		wireOffColor: 'rgb(126, 85, 205)',
 		menuBackground: 'rgb(30, 30, 30)',
 		menuTextColor: 'white',
 		buttonColor: 'rgb(48, 48, 48)',
@@ -323,6 +329,7 @@ function update(id) {
 			objectMap.get(objectMap.get(id).to).input[objectMap.get(id).inIndex] |= objectMap.get(id).powered
 			break
 		case BLOCK:
+			console.log(`${id}: ${objectMap.get(id).input[0]}`)
 			objectMap.get(id).output[0] = objectMap.get(id).operation(objectMap.get(id).input)
 			break
 	}
@@ -486,6 +493,7 @@ canvas.addEventListener('mousedown', (event) => {
 			}
 			break
 	}
+	wireConnectFromID = wireConnectFromHoverID
 });
 
 canvas.addEventListener('mouseup', (event) => {
@@ -495,6 +503,17 @@ canvas.addEventListener('mouseup', (event) => {
 		draggedObjectID = null;
 	}
 	connectingWires = false
+
+	// Connect wire
+	if(wireConnectToHoverID != null) {
+		const id = genID()
+		connectWire(wireConnectFromID, wireConnectToHoverID, id)
+		objectMap.get(id).inIndex = wireConnectFromIndex
+		objectMap.get(id).valIndex = 0
+		wireConnectToHoverID = null
+	}
+
+	wireConnectFromID = null
 });
 
 window.addEventListener('keydown', (event) => {
@@ -631,10 +650,10 @@ function drawObject(id) {
 	case WIRE:
 		ctx.strokeStyle = selectedColorScheme.wireOffColor
 		if(obj.powered) {
+			ctx.strokeStyle = selectedColorScheme.wireOnColor
 			if(rainbow) {
 				ctx.strokeStyle = `hsl(${wireHue}, 100%, 50%)`
 			}
-			ctx.strokeStyle = selectedColorScheme.wireOnColor//wireOnColor
 		}
 		leftStudPositions = []
 		rightStudPositions = []
@@ -696,6 +715,9 @@ function drawObject(id) {
 					ctx.fillStyle = 'rgba(255, 255, 0, 0.5)'
 					ctx.fill()
 					ctx.strokeStyle = "black"
+					wireConnectFromHoverID = id
+					wireFromPosition.x = obj.position.x + obj.size.x + sketchOffset.x + studLen
+					wireFromPosition.y = obj.position.y + relY + sketchOffset.y
 				}
 			}
 		} else {
@@ -714,6 +736,9 @@ function drawObject(id) {
 					ctx.fillStyle = 'rgba(255, 255, 0, 0.5)'
 					ctx.fill()
 					ctx.strokeStyle = "black"
+					wireConnectFromHoverID = id
+					wireFromPosition.x = obj.position.x + obj.size.x + sketchOffset.x + studLen
+					wireFromPosition.y = obj.position.y + relY + sketchOffset.y
 				}
 			}
 		}
@@ -730,6 +755,8 @@ function drawObject(id) {
 			ctx.stroke()
 
 			if(getDistance(toScreenX(obj.position.x - 30), toScreenY(obj.position.y) + relY, mouseX, mouseY) < 20) {
+				wireConnectToHoverID = id
+				wireConnectFromIndex = i
 				if(mouseDown && draggedObjectID == null)
 					connectingWires = true
 				ctx.arc(toScreenX(obj.position.x) - studLen/2, toScreenY(obj.position.y) + relY, 20, 0, 2 * Math.PI)
@@ -805,6 +832,8 @@ let flashAlpha = 0
 function draw() {
 	deltaTime = new Date().getTime() - lastExecution
 	
+	//console.log(`${wireConnectFromHoverID} : ${wireConnectFromID}`)
+
 	wireHue = (wireHue + 5) % 360
 
 	if(flashAlpha > 0) {
@@ -879,6 +908,9 @@ function draw() {
 		}
 	}
 
+	wireConnectFromIndex = null
+	wireConnectFromHoverID = null
+	wireConnectToHoverID = null
 	for(let [key, obj] of objectMap) {
 		drawObject(key)
 		if(obj.type == BLOCK) {
@@ -886,6 +918,11 @@ function draw() {
 				obj.input[i] = false
 			}
 		}
+	}
+
+	if(wireConnectFromID != null) {
+		ctx.strokeStyle = selectedColorScheme.wireOffColor
+		drawWire(wireFromPosition.x, wireFromPosition.y, mouseX, mouseY)
 	}
 	
 	updateAllOfType(WIRE)
