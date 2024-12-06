@@ -34,9 +34,13 @@ label {
 
 select {
 	width: 280px;
-	height: 30px;
+	height: 40px;
 	margin-bottom: 10px;
 	text-align: center;
+}
+
+a {
+	margin-top: 20px;
 }
 
 #menu {
@@ -57,6 +61,7 @@ button, select {
 	border-style: solid;
 	border-color: rgb(100, 100, 100);
 	border-radius: 15px;
+	font-size: 18px;
 }
 
 button:hover, select:hover {
@@ -65,6 +70,10 @@ button:hover, select:hover {
 	border-color: rgb(100, 100, 100);
 	border-radius: 15px;
 	cursor:	pointer;
+}
+
+button:active {
+	border-color: red;
 }
 
 #canvas-container {
@@ -77,19 +86,20 @@ button:hover, select:hover {
 
 .menuButtonWide {
 	width: 280px;
-	height: 30px;
+	height: 40px;
 	margin-bottom: 10px;
 }
 
 .menu-text-input {
 	width: 280px;
-	height: 30px;
+	height: 40px;
 	margin-bottom: 10px;
 	padding-left: 10px;
 	border: 0px;
 	border-style: solid;
 	border-color: rgb(100, 100, 100);
 	border-radius: 15px;
+	font-size: 18px;
 }
 
 .with-margin {
@@ -106,7 +116,7 @@ button:hover, select:hover {
 	margin-bottom: 10px;
 	background-color: white;
 	width: 280px;
-	height: calc(100vh - 350px);
+	height: calc(100vh - 450px);
 	border: 0px;
 	border-style: solid;
 	border-color: rgb(120, 120, 120);

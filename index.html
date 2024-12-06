@@ -11,7 +11,6 @@
 		<canvas id="myCanvas"></canvas>
 	</div>
 	<div id="menu">
-		<!--<p>Neue Skizze erstellen</p>-->
     	<input type="text" value="Neue Schaltung" class="menu-text-input" id="name" name="name">
 		<p class="with-margin">Farbschema</p>
 		<select id="colorscheme" name="colorscheme">
@@ -21,73 +20,73 @@
 			<option value="4">Blueprint</option>
 			<option value="0">Hell</option>
 		</select>
-		<!--<button class="menuButtonWide" id="download-button">Skizze Herunterladen</button>
-		<p>Bereite Skizze hochladen</p>
-		<button class="menuButtonWide" id="upload-button">Datei auswählen</button>
-		<input class="file-input" type="file" name="file-upload" id="file-upload">
-		<button class="menuButtonWide" id="upload-button">Hochladen und Öffnen</button>-->
-		<p class="with-margin">Gatter</p>
-		<div id="item-select">
-			<div class="place-button">
-				<input class="object-place" type="image" src="assets/not.png" id="bnot"/>
-				<p class="object-label">Nicht (NOT)</p>
-			</div>
-			<div class="place-button">
-				<input class="object-place" type="image" src="assets/and.png" id="band"//>
-				<p class="object-label">Und (AND)</p>
-			</div>
-			<div class="place-button">
-				<input class="object-place" type="image" src="assets/or.png" id="bor"/>
-				<p class="object-label">Oder (OR)</p>
-			</div>
-			<div class="place-button">
-				<input class="object-place" type="image" src="assets/xor.png" id="bxor"/>
-				<p class="object-label">Ex.-Oder (XOR)</p>
-			</div>
-			<div class="place-button">
-				<input class="object-place" type="image" src="assets/nand.png" id="bnand"/>
-				<p class="object-label">Und-Nicht (NAND)</p>
-			</div>
-			<div class="place-button">
-				<input class="object-place" type="image" src="assets/nor.png" id="bnor"/>
-				<p class="object-label">Oder-Nicht (NOR)</p>
-			</div>
-			<div class="place-button">
-				<input class="object-place" type="image" src="assets/xnor.png" id="bxnor"/>
-				<p class="object-label">Ex.-Oder-Nicht (XNOR)</p>
-			</div>
-			<div class="place-button">
-				<input class="object-place" type="image" src="assets/kk.png" id="bkk"/>
-				<p class="object-label">Kabel-Kreuzung</p>
-			</div>
-			<div class="place-button">
-				<input class="object-place" type="image" src="assets/sch.png" id="bsch"/>
-				<p class="object-label">Schalter</p>
-			</div>
-			<div class="place-button">
-				<input class="object-place" type="image" src="assets/gb.png" id="bgb"/>
-				<p class="object-label">Glühbirne</p>
-			</div>
-		</div>
-		<!--<button class="menuButtonWide" id="table-gen-button">Wahrheitstabelle anzeigen</button>-->
-		<!--<label for="colorscheme">Farbschema</label>-->
-
 		<p class="with-margin">Tools</p>
 		<div align="right">
 			<button title="Mauszeiger-Tool" class="tool-button" id="cursor-button" type="image">
-				<img class="logo" src="assets/cursor.png", alt="Mouse">
+				<img class="logo" src="assets/dark/cursor.png", alt="Mouse">
 			</button>
 			<button title="Lösch-Tool" class="tool-button" id="delete-button" type="image">
-				<img class="logo" src="assets/trash.png", alt="Delete">
+				<img class="logo" src="assets/dark/trash.png", alt="Delete">
 			</button>
-			<button title="Herunterladen" class="tool-button" id="download-button" type="image">
-				<img class="logo" src="assets/download.png", alt="Download">
-			</button>
-			<button title="Nicht LSD" class="tool-button" id="rainbow-button" type="image">
-				<img class="logo" src="assets/rainbow.png", alt="Rainbow">
+			<button title="Text-Bearbeitung-Tool" class="tool-button" id="edit-button" type="image">
+				<img class="logo" src="assets/dark/text.png", alt="Edit">
 			</button>
 		</div>
-		<!--<a href="https://github.com/MaxAve/" target="_blank">Mein GitHub</a>-->
+		<div align="right">
+			<button title="Skizze herunterladen" class="tool-button" id="download-button" type="image">
+				<img class="logo" src="assets/dark/download.png", alt="Download">
+			</button>
+			<button title="Skizze hochladen und öffnen" class="tool-button" id="upload-button" type="image">
+				<img class="logo" src="assets/dark/upload.png", alt="Upload">
+			</button>
+			<button title="Nicht LSD" class="tool-button" id="rainbow-button" type="image">
+				<img class="logo" src="assets/dark/rainbow.png", alt="Rainbow">
+			</button>
+		</div>
+		<p class="with-margin">Gatter</p>
+		<div id="item-select">
+			<div class="place-button">
+				<input class="object-place" type="image" src="assets/dark/not.png" id="bnot"/>
+				<p class="object-label">Nicht (NOT)</p>
+			</div>
+			<div class="place-button">
+				<input class="object-place" type="image" src="assets/dark/and.png" id="band"//>
+				<p class="object-label">Und (AND)</p>
+			</div>
+			<div class="place-button">
+				<input class="object-place" type="image" src="assets/dark/or.png" id="bor"/>
+				<p class="object-label">Oder (OR)</p>
+			</div>
+			<div class="place-button">
+				<input class="object-place" type="image" src="assets/dark/xor.png" id="bxor"/>
+				<p class="object-label">Ex.-Oder (XOR)</p>
+			</div>
+			<div class="place-button">
+				<input class="object-place" type="image" src="assets/dark/nand.png" id="bnand"/>
+				<p class="object-label">Und-Nicht (NAND)</p>
+			</div>
+			<div class="place-button">
+				<input class="object-place" type="image" src="assets/dark/nor.png" id="bnor"/>
+				<p class="object-label">Oder-Nicht (NOR)</p>
+			</div>
+			<div class="place-button">
+				<input class="object-place" type="image" src="assets/dark/xnor.png" id="bxnor"/>
+				<p class="object-label">Ex.-Oder-Nicht (XNOR)</p>
+			</div>
+			<div class="place-button">
+				<input class="object-place" type="image" src="assets/dark/kk.png" id="bkk"/>
+				<p class="object-label">Kabel-Kreuzung</p>
+			</div>
+			<div class="place-button">
+				<input class="object-place" type="image" src="assets/dark/sch.png" id="bsch"/>
+				<p class="object-label">Schalter</p>
+			</div>
+			<div class="place-button">
+				<input class="object-place" type="image" src="assets/dark/gb.png" id="bgb"/>
+				<p class="object-label">Glühbirne</p>
+			</div>
+		</div>
+		<a href="https://github.com/MaxAve/" target="_blank">Folge mich auf GitHub</a>
 	</div>
 	<script src="script.js"></script>
 </body>

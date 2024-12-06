@@ -101,6 +101,8 @@ let grenadeLanded = false
 const colorSchemes = {
 	flashbang: {
 		id: 0,
+		dark: false,
+		dotted: false,
 		outline: 'black',
 		dragOutline: 'rgb(252, 215, 27)',
 		background: 'white',
@@ -113,10 +115,11 @@ const colorSchemes = {
 		menuTextColor: 'black',
 		buttonColor: 'rgb(225, 225, 225)',
 		borderColor: 'rgb(160, 160, 160)',
-		dotted: false,
 	},
 	dracula: {
 		id: 1,
+		dark: true,
+		dotted: true,
 		outline: 'hsl(323, 70%, 60%)',
 		dragOutline: 'white',
 		background: 'rgb(48, 48, 48)',
@@ -124,15 +127,16 @@ const colorSchemes = {
 		lineColor: 'rgb(70, 70, 70)',
 		textColor: 'white',
 		wireOnColor: 'rgb(249, 247, 121)',
-		wireOffColor: 'rgb(126, 85, 205)',
+		wireOffColor: 'rgb(86, 45, 165)',
 		menuBackground: 'rgb(30, 30, 30)',
 		menuTextColor: 'white',
 		buttonColor: 'rgb(48, 48, 48)',
 		borderColor: 'rgb(80, 80, 80)',
-		dotted: true,
 	},
 	bnw: {
 		id: 2,
+		dark: true,
+		dotted: true,
 		outline: 'white',
 		dragOutline: 'rgb(150, 150, 150)',
 		background: 'black',
@@ -140,15 +144,28 @@ const colorSchemes = {
 		lineColor: 'rgb(40, 40, 40)',
 		textColor: 'white',
 		wireOnColor: 'white',
-		wireOffColor: 'rgb(100, 100, 100)',
+		wireOffColor: 'rgb(60, 60, 60)',
 		menuBackground: 'rgb(15, 15, 15)',
 		menuTextColor: 'white',
 		buttonColor: 'rgb(50, 50, 50)',
 		borderColor: 'rgb(80, 80, 80)',
-		dotted: true,
 	},
 	chalkboard: {
 		id: 3,
+		dark: true,
+		dotted: false,
+		outline: 'white',
+		dragOutline: 'rgb(150, 150, 150)',
+		background: 'rgb(31, 43, 37)',
+		gateBackground: 'rgb(20, 36, 28)',
+		lineColor: 'rgb(40, 56, 48)',
+		textColor: 'white',
+		wireOnColor: '#c974b7',
+		wireOffColor: 'white',
+		menuBackground: '#181e1b',
+		menuTextColor: 'white',
+		buttonColor: '#222b26',
+		borderColor: 'rgb(80, 80, 80)',
 	},
 	blueprint: {
 		id: 4,
@@ -170,6 +187,7 @@ function updateMenu() {
 		if(id == 'menu') {
 			element.style.setProperty('background-color', selectedColorScheme.menuBackground)
 		}
+
 		if(tag == 'P' || tag == 'LABEL' || tag == 'INPUT') {
 			element.style.setProperty('color', selectedColorScheme.menuTextColor)
 		}
@@ -177,7 +195,19 @@ function updateMenu() {
 			element.style.setProperty('background-color', selectedColorScheme.background)
 			element.style.setProperty('color', selectedColorScheme.menuTextColor)
 		}
+
 		if((tag == 'BUTTON' || tag == 'INPUT' || tag == 'SELECT') && _class != 'object-place' && _class != 'file-input') {
+			element.style.setProperty('background-color', selectedColorScheme.buttonColor)
+		}
+
+		if((tag == 'BUTTON' || tag == 'INPUT' || tag == 'IMG') && element.hasAttribute('src')) {
+			if(selectedColorScheme.dark)
+				element.setAttribute('src', element.getAttribute('src').split('dark').join('light'))
+			else
+				element.setAttribute('src', element.getAttribute('src').split('light').join('dark'))
+		}
+		
+		if(selectedColorScheme.id == 3 && id == 'item-select') {
 			element.style.setProperty('background-color', selectedColorScheme.buttonColor)
 		}
 
@@ -326,12 +356,10 @@ function update(id) {
 					objectMap.get(id).powered = objectMap.get(objectMap.get(id).from).powered
 					break
 			}
-			objectMap.get(objectMap.get(id).to).input[objectMap.get(id).inIndex] = false//objectMap.get(id).powered // TODO
+			//TODO when combining active and inactive wires and connecting them to the same stud, sometimes the stud will deactivate
+			objectMap.get(objectMap.get(id).to).input[objectMap.get(id).inIndex] = false
 			if(objectMap.get(id).powered)
-				objectMap.get(objectMap.get(id).to).input[objectMap.get(id).inIndex] = true
-			
-			// TODO revise (the gate only works when connected with wires)
-			//objectMap.get(objectMap.get(id).to).output[0] = objectMap.get(objectMap.get(id).to).operation(objectMap.get(objectMap.get(id).to).input)
+				objectMap.get(objectMap.get(id).to).input[objectMap.get(id).inIndex] = true	
 			break
 		case BLOCK:
 			//console.log(`${id}: ${objectMap.get(id).input[0]}`)
