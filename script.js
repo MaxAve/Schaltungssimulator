@@ -316,14 +316,17 @@ function genID() {
 	return Math.floor(Math.random() * 999999999999999)
 }
 
-function createObject(type, id, label) {
+function createObject(type, id=null, label=null) {
 	console.log(`Creating object of type ${type}`)
 	const obj = JSON.parse(JSON.stringify((objectPresets[type])))
 	if(obj.type > 0) {
 		obj.position.x = canvas.width / 2 + Math.floor(Math.random() * 40) - 20
 		obj.position.y = canvas.height / 2 + Math.floor(Math.random() * 40) - 20
 	}
-	obj.label = label
+	if(label != null)
+		obj.label = label
+	if(id == null)
+		id = genID()
 	objectMap.set(id, obj)
 }
 
@@ -333,13 +336,12 @@ function connectWire(from, to, objID=null) {
 		id = Math.floor(Math.random() * 999999999999999)
 	else
 		id = objID
-	createObject('wire', id);
+	createObject('wire', id)
 	objectMap.get(id).from = from
 	objectMap.get(id).to = to
-	if(objectMap.get(from).type == BLOCK) {
-		//objectMap.get(from).output.push(false)
+	/*if(objectMap.get(from).type == BLOCK) {
 		objectMap.get(id).valIndex = objectMap.get(from).output.length - 1
-	}
+	}*/
 }
 
 function update(id) {
@@ -496,16 +498,23 @@ canvas.addEventListener('mousedown', (event) => {
 	mouseDown = true
 	worldMouseX = (mouseX - sketchOffset.x) + cellSize + (mouseX - sketchOffset.x) % cellSize // TODO this is a temporary fix, find out problem (likely to do with the way objects are snapped into place)
 	worldMouseY = (mouseY - sketchOffset.y) + cellSize + (mouseY - sketchOffset.y) % cellSize
+	
+	// Lengths of switch parts
+	const rightSideLen = cellSize * 2
+	const gapLen = cellSize * 3
+	const switchLen = cellSize * 3.5
+	
 	switch (event.button) {
 		case 0:
 			draggingObject = false
+		
 			for(let [key, obj] of objectMap) {
 				if(obj.type == 1 && worldMouseX >= obj.position.x && worldMouseY >= obj.position.y && worldMouseX <= (obj.position.x + obj.size.x) && worldMouseY <= (obj.position.y + obj.size.y)) {
 					draggedObjectID = key
 					draggedObjectMouseDiff.x = obj.position.x - mouseX
 					draggedObjectMouseDiff.y = obj.position.y - mouseY
 					draggingObject = true
-				} else if(obj.type == 2 && /*Math.sqrt(Math.pow(obj.position.x - worldMouseX, 2) + Math.pow(obj.position.y - (worldMouseY), 2))*/getDistance(obj.position.x, obj.position.y, worldMouseX, worldMouseY) <= switchRadius) {
+				} else if(obj.type == 2 && getDistance(toScreenX(obj.position.x - rightSideLen - gapLen / 2), toScreenY(obj.position.y), mouseX, mouseY) < cellSize * 2) {
 					draggedObjectID = key
 					draggedObjectMouseDiff.x = obj.position.x - mouseX
 					draggedObjectMouseDiff.y = obj.position.y - mouseY
@@ -520,7 +529,7 @@ canvas.addEventListener('mousedown', (event) => {
 			break
 		case 2:
 			for(let [key, obj] of objectMap) {
-				if(obj.type == 2 && /*Math.sqrt(Math.pow(obj.position.x - (worldMouseX), 2) + Math.pow(obj.position.y - (worldMouseY), 2))*/getDistance(obj.position.x, obj.position.y, worldMouseX, worldMouseY) <= switchRadius) {
+				if(obj.type == 2 && getDistance(toScreenX(obj.position.x - rightSideLen - gapLen / 2), toScreenY(obj.position.y), mouseX, mouseY) < cellSize * 2) {
 					obj.powered = !obj.powered
 				}
 			}
@@ -613,6 +622,7 @@ bkk.addEventListener("click", () => {
 })
 
 bsch.addEventListener("click", () => {
+	createObject('switch')
 })
 
 bgb.addEventListener("click", () => {
@@ -644,7 +654,7 @@ colorSchemeSelection.addEventListener("click", () => {
 			flashbangSprite.position.y = 0
 			flashbangSprite.velocity.x = 800
 			flashbangSprite.velocity.rotation = 15
-			flashbangSprite.acceleration.x = -300
+			flashbangSprite.acceleration.x = -250
 			flashbangSprite.acceleration.y = 3000
 			flashbangSprite.acceleration.rotation = -(Math.floor(Math.random() % 100) + 500) / 100
 			grenadeLanded = false
@@ -745,7 +755,7 @@ function drawObject(id) {
 					if(mouseDown && draggedObjectID == null)
 						connectingWires = true
 					ctx.arc(toScreenX(obj.position.x + obj.size.x + 10), toScreenY(obj.position.y + relY), 20, 0, 2 * Math.PI)
-					ctx.fillStyle = 'rgba(255, 255, 0, 0.5)'
+					ctx.fillStyle = 'rgba(255, 255, 0, 0.3)'
 					ctx.fill()
 					ctx.strokeStyle = "black"
 					wireConnectFromHoverID = id
@@ -766,7 +776,7 @@ function drawObject(id) {
 					if(mouseDown && draggedObjectID == null)
 						connectingWires = true
 					ctx.arc(toScreenX(obj.position.x + obj.size.x + 10), toScreenY(obj.position.y + relY), 20, 0, 2 * Math.PI)
-					ctx.fillStyle = 'rgba(255, 255, 0, 0.5)'
+					ctx.fillStyle = 'rgba(255, 255, 0, 0.3)'
 					ctx.fill()
 					ctx.strokeStyle = "black"
 					wireConnectFromHoverID = id
@@ -793,7 +803,7 @@ function drawObject(id) {
 				if(mouseDown && draggedObjectID == null)
 					connectingWires = true
 				ctx.arc(toScreenX(obj.position.x) - studLen/2, toScreenY(obj.position.y) + relY, 20, 0, 2 * Math.PI)
-				ctx.fillStyle = 'rgba(255, 255, 0, 0.5)'
+				ctx.fillStyle = 'rgba(255, 255, 0, 0.3)'
 				ctx.fill()
 				ctx.strokeStyle = "black"
 			}
@@ -810,19 +820,39 @@ function drawObject(id) {
 		ctx.stroke()
 		break
 	case SWITCH:
-		ctx.beginPath()
-		ctx.arc(toScreenX(obj.position.x), toScreenY(obj.position.y), switchRadius, 0, 2 * Math.PI)
-		ctx.fillStyle = (obj.powered ? "red" : 'rgb(200, 200, 200)')
-		ctx.fill()
-		ctx.strokeStyle = "black"
-		ctx.stroke()
+		const rightSideLen = cellSize * 2
+		const gapLen = cellSize * 3
+		const switchLen = cellSize * 3.5
+		ctx.strokeStyle = obj.powered ? selectedColorScheme.wireOnColor : selectedColorScheme.wireOffColor
+		if(obj.powered && rainbow)
+			ctx.strokeStyle = `hsl(${wireHue}, 100%, 50%)`
+		drawLine(toScreenX(obj.position.x), toScreenY(obj.position.y), toScreenX(obj.position.x - rightSideLen), toScreenY(obj.position.y))
+		drawLine(toScreenX(obj.position.x - rightSideLen), toScreenY(obj.position.y), toScreenX(obj.position.x - rightSideLen), toScreenY(obj.position.y - studLen))
 		
-		// Stud
-		ctx.strokeStyle = (obj.powered ? selectedColorSchemes.wireOnColor : 'black')
+		ctx.strokeStyle = selectedColorScheme.wireOnColor
+		ctx.fillStyle = selectedColorScheme.wireOnColor
+		if(rainbow) {
+			ctx.strokeStyle = `hsl(${wireHue}, 100%, 50%)`
+			ctx.fillStyle = `hsl(${wireHue}, 100%, 50%)`
+		}
+		drawLine(toScreenX(obj.position.x - rightSideLen - gapLen), toScreenY(obj.position.y), toScreenX(obj.position.x - rightSideLen * 2 - gapLen), toScreenY(obj.position.y))
+		if(obj.powered) {
+			drawLine(toScreenX(obj.position.x - rightSideLen - gapLen), toScreenY(obj.position.y), toScreenX(obj.position.x - rightSideLen - gapLen + Math.cos(0.18) * switchLen), toScreenY(obj.position.y - Math.sin(0.18) * switchLen))
+		} else {
+			drawLine(toScreenX(obj.position.x - rightSideLen - gapLen), toScreenY(obj.position.y), toScreenX(obj.position.x - rightSideLen - gapLen + Math.cos(0.79) * switchLen), toScreenY(obj.position.y - Math.sin(0.79) * switchLen))
+		}
+
 		ctx.beginPath()
-		ctx.moveTo(toScreenX(obj.position.x) + switchRadius, toScreenY(obj.position.y))
-		ctx.lineTo(toScreenX(obj.position.x) + studLen + switchRadius, toScreenY(obj.position.y))
-		ctx.stroke()
+		ctx.arc(toScreenX(obj.position.x - rightSideLen - gapLen), toScreenY(obj.position.y), cellSize / 4, 0, 2 * Math.PI)
+		ctx.fill()
+
+		// Hitbox outline
+		if(getDistance(toScreenX(obj.position.x - rightSideLen - gapLen / 2), toScreenY(obj.position.y), mouseX, mouseY) < cellSize * 2) {
+			ctx.fillStyle = 'rgba(255, 255, 0, 0.3)'
+			ctx.arc(toScreenX(obj.position.x - rightSideLen - gapLen / 2), toScreenY(obj.position.y), cellSize * 2, 0, 2 * Math.PI)
+			ctx.fill()
+			//ctx.fillRect(toScreenX(obj.position.x - rightSideLen - gapLen - cellSize), toScreenY(obj.position.y - gapLen), gapLen + cellSize * 2, gapLen * 1.5)
+		}
 		break
 	}
 }
