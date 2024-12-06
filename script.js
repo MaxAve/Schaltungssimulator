@@ -210,10 +210,10 @@ function OR(input) {
 }
 
 function NOT(input) {
-	let res = []
-	for(let i = 0; i < input.length; i++)
-		res.push(!input[i])
-	return res
+	// let res = []
+	// for(let i = 0; i < input.length; i++)
+	// 	res.push(!input[i])
+	return !input[0]
 }
 
 function XOR(input) {
@@ -326,10 +326,15 @@ function update(id) {
 					objectMap.get(id).powered = objectMap.get(objectMap.get(id).from).powered
 					break
 			}
-			objectMap.get(objectMap.get(id).to).input[objectMap.get(id).inIndex] |= objectMap.get(id).powered
+			objectMap.get(objectMap.get(id).to).input[objectMap.get(id).inIndex] = false//objectMap.get(id).powered // TODO
+			if(objectMap.get(id).powered)
+				objectMap.get(objectMap.get(id).to).input[objectMap.get(id).inIndex] = true
+			
+			// TODO revise (the gate only works when connected with wires)
+			//objectMap.get(objectMap.get(id).to).output[0] = objectMap.get(objectMap.get(id).to).operation(objectMap.get(objectMap.get(id).to).input)
 			break
 		case BLOCK:
-			console.log(`${id}: ${objectMap.get(id).input[0]}`)
+			//console.log(`${id}: ${objectMap.get(id).input[0]}`)
 			objectMap.get(id).output[0] = objectMap.get(id).operation(objectMap.get(id).input)
 			break
 	}
@@ -722,7 +727,7 @@ function drawObject(id) {
 			}
 		} else {
 			for(let i = 0; i < obj.output.length; i++) {
-				ctx.strokeStyle = (obj.output[i] ? selectedColorSchemewireOnColor : selectedColorScheme.wireOffColor)
+				ctx.strokeStyle = (obj.output[i] ? selectedColorScheme.wireOnColor : selectedColorScheme.wireOffColor)
 				if(obj.output[i] && rainbow) {
 					ctx.strokeStyle = `hsl(${wireHue}, 100%, 50%)`
 				}
