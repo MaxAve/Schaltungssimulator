@@ -514,7 +514,7 @@ canvas.addEventListener('mousedown', (event) => {
 					draggedObjectMouseDiff.x = obj.position.x - mouseX
 					draggedObjectMouseDiff.y = obj.position.y - mouseY
 					draggingObject = true
-				} else if(obj.type == 2 && getDistance(toScreenX(obj.position.x - rightSideLen - gapLen / 2), toScreenY(obj.position.y), mouseX, mouseY) < cellSize * 2) {
+				} else if(obj.type == 2 && mouseX < toScreenX(obj.position.x - 25) && mouseX > toScreenX(obj.position.x - rightSideLen * 2 - gapLen) && mouseY > toScreenY(obj.position.y - cellSize * 3) && mouseY < toScreenY(obj.position.y + cellSize / 2)/*getDistance(toScreenX(obj.position.x - rightSideLen - gapLen / 2), toScreenY(obj.position.y), mouseX, mouseY) < cellSize * 3*/) {
 					draggedObjectID = key
 					draggedObjectMouseDiff.x = obj.position.x - mouseX
 					draggedObjectMouseDiff.y = obj.position.y - mouseY
@@ -529,7 +529,7 @@ canvas.addEventListener('mousedown', (event) => {
 			break
 		case 2:
 			for(let [key, obj] of objectMap) {
-				if(obj.type == 2 && getDistance(toScreenX(obj.position.x - rightSideLen - gapLen / 2), toScreenY(obj.position.y), mouseX, mouseY) < cellSize * 2) {
+				if(obj.type == 2 && mouseX < toScreenX(obj.position.x - 25) && mouseX > toScreenX(obj.position.x - rightSideLen * 2 - gapLen) && mouseY > toScreenY(obj.position.y - cellSize * 3) && mouseY < toScreenY(obj.position.y + cellSize / 2)/*getDistance(toScreenX(obj.position.x - rightSideLen - gapLen / 2), toScreenY(obj.position.y), mouseX, mouseY) < cellSize * 3*/) {
 					obj.powered = !obj.powered
 				}
 			}
@@ -714,24 +714,30 @@ function drawObject(id) {
 		toPos = null
 
 		// Draw wires
-		if(objectMap.get(obj.from).type == BLOCK) {
-			let relY = (objectMap.get(obj.from).size.y / objectMap.get(obj.from).output.length) * (obj.valIndex + 0.5)
-			rightStudPositions.push([objectMap.get(obj.from).position.x + objectMap.get(obj.from).size.x, objectMap.get(obj.from).position.y + relY])
-			fromPos = [objectMap.get(obj.from).position.x + objectMap.get(obj.from).size.x + studLen, objectMap.get(obj.from).position.y + relY]
-		} else if(objectMap.get(obj.from).type == WIRE) {
-			fromPos = [objectMap.get(obj.from).position.x, objectMap.get(obj.from).position.y]
-		} else if(objectMap.get(obj.from).type == SWITCH) {
-			fromPos = [objectMap.get(obj.from).position.x + switchRadius + studLen, objectMap.get(obj.from).position.y]
+		if(objectMap.has(obj.from)) {
+			if(objectMap.get(obj.from).type == BLOCK) {
+				let relY = (objectMap.get(obj.from).size.y / objectMap.get(obj.from).output.length) * (obj.valIndex + 0.5)
+				rightStudPositions.push([objectMap.get(obj.from).position.x + objectMap.get(obj.from).size.x, objectMap.get(obj.from).position.y + relY])
+				fromPos = [objectMap.get(obj.from).position.x + objectMap.get(obj.from).size.x + studLen, objectMap.get(obj.from).position.y + relY]
+			} else if(objectMap.get(obj.from).type == WIRE) {
+				fromPos = [objectMap.get(obj.from).position.x, objectMap.get(obj.from).position.y]
+			} else if(objectMap.get(obj.from).type == SWITCH) {
+				fromPos = [objectMap.get(obj.from).position.x, objectMap.get(obj.from).position.y]
+			}
 		}
-		if(objectMap.get(obj.to).type == BLOCK) {
-			let relY = (objectMap.get(obj.to).size.y / objectMap.get(obj.to).input.length) * (obj.inIndex + 0.5)
-			leftStudPositions.push([objectMap.get(obj.to).position.x - studLen, objectMap.get(obj.to).position.y + relY])
-			toPos = [objectMap.get(obj.to).position.x - studLen, objectMap.get(obj.to).position.y + relY]
-		} else if(objectMap.get(obj.to).type == WIRE) {
-			toPos = [objectMap.get(obj.to).position.x, objectMap.get(obj.to).position.y]
+		if(objectMap.has(obj.to)) {
+			if(objectMap.get(obj.to).type == BLOCK) {
+				let relY = (objectMap.get(obj.to).size.y / objectMap.get(obj.to).input.length) * (obj.inIndex + 0.5)
+				leftStudPositions.push([objectMap.get(obj.to).position.x - studLen, objectMap.get(obj.to).position.y + relY])
+				toPos = [objectMap.get(obj.to).position.x - studLen, objectMap.get(obj.to).position.y + relY]
+			} else if(objectMap.get(obj.to).type == WIRE) {
+				toPos = [objectMap.get(obj.to).position.x, objectMap.get(obj.to).position.y]
+			}
 		}
-
-		drawWire(toScreenX(fromPos[0]), toScreenY(fromPos[1]), toScreenX(toPos[0]), toScreenY(toPos[1]))
+		
+		if(fromPos != null && toPos != null) {
+			drawWire(toScreenX(fromPos[0]), toScreenY(fromPos[1]), toScreenX(toPos[0]), toScreenY(toPos[1]))
+		}
 		break
 	case BLOCK:	
 		ctx.fillStyle = selectedColorScheme.gateBackground
@@ -807,14 +813,14 @@ function drawObject(id) {
 			ctx.stroke()
 
 			if(getDistance(toScreenX(obj.position.x - 30), toScreenY(obj.position.y) + relY, mouseX, mouseY) < 20) {
-				wireConnectToHoverID = id
-				wireConnectFromIndex = i
 				if(mouseDown && draggedObjectID == null)
 					connectingWires = true
 				ctx.arc(toScreenX(obj.position.x) - studLen/2, toScreenY(obj.position.y) + relY, 20, 0, 2 * Math.PI)
 				ctx.fillStyle = 'rgba(255, 255, 0, 0.3)'
 				ctx.fill()
 				ctx.strokeStyle = "black"
+				wireConnectToHoverID = id
+				wireConnectFromIndex = i
 			}
 		}
 
@@ -855,13 +861,23 @@ function drawObject(id) {
 		ctx.arc(toScreenX(obj.position.x - rightSideLen - gapLen), toScreenY(obj.position.y), cellSize / 4, 0, 2 * Math.PI)
 		ctx.fill()
 
-		// Hitbox outline
-		if(getDistance(toScreenX(obj.position.x - rightSideLen - gapLen / 2), toScreenY(obj.position.y), mouseX, mouseY) < cellSize * 2) {
+		// Wire connection prompt
+		if(getDistance(toScreenX(obj.position.x), toScreenY(obj.position.y), mouseX + 20, mouseY) < 20) {
+			if(mouseDown && draggedObjectID == null)
+				connectingWires = true
 			ctx.fillStyle = 'rgba(255, 255, 0, 0.3)'
-			ctx.arc(toScreenX(obj.position.x - rightSideLen - gapLen / 2), toScreenY(obj.position.y), cellSize * 2, 0, 2 * Math.PI)
+			ctx.arc(toScreenX(obj.position.x), toScreenY(obj.position.y), 20, 0, 2 * Math.PI)
 			ctx.fill()
+			wireConnectFromHoverID = id
+			wireFromPosition.x = toScreenX(obj.position.x) 
+			wireFromPosition.y = toScreenY(obj.position.y)
+		} /*else if(getDistance(toScreenX(obj.position.x - rightSideLen - gapLen / 2), toScreenY(obj.position.y), mouseX + 20, mouseY) < cellSize * 3) {
+			// Hitbox outline
+			//ctx.fillStyle = 'rgba(255, 255, 0, 0.3)'
+			//ctx.arc(toScreenX(obj.position.x - rightSideLen - gapLen / 2), toScreenY(obj.position.y), cellSize * 2, 0, 2 * Math.PI)
+			//ctx.fill()
 			//ctx.fillRect(toScreenX(obj.position.x - rightSideLen - gapLen - cellSize), toScreenY(obj.position.y - gapLen), gapLen + cellSize * 2, gapLen * 1.5)
-		}
+		}*/
 		break
 	}
 }
