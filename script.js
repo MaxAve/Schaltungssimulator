@@ -358,14 +358,14 @@ function update(id) {
 					objectMap.get(id).powered = objectMap.get(objectMap.get(id).from).powered
 					break
 			}
-			//TODO when combining active and inactive wires and connecting them to the same stud, sometimes the stud will deactivate
-			objectMap.get(objectMap.get(id).to).input[objectMap.get(id).inIndex] = false
 			if(objectMap.get(id).powered)
 				objectMap.get(objectMap.get(id).to).input[objectMap.get(id).inIndex] = true	
 			break
 		case BLOCK:
-			//console.log(`${id}: ${objectMap.get(id).input[0]}`)
 			objectMap.get(id).output[0] = objectMap.get(id).operation(objectMap.get(id).input)
+			// TODO this causes	studs to not be rendered with the activation color
+			for(let i = 0; i < objectMap.get(id).input.length; i++)
+				objectMap.get(id).input[i] = false
 			break
 	}
 }
@@ -787,7 +787,7 @@ function drawObject(id) {
 		}
 		// Left studs
 		for(let i = 0; i < obj.input.length; i++) {
-			ctx.strokeStyle = (obj.input[i] ? selectedColorScheme.wireOnColor : selectedColorScheme.wireOffColor) 
+			ctx.strokeStyle = selectedColorScheme.outline//(obj.input[i] ? selectedColorScheme.wireOnColor : selectedColorScheme.wireOffColor) 
 			if(obj.input[i] && rainbow) {
 				ctx.strokeStyle = `hsl(${wireHue}, 100%, 50%)`
 			}
@@ -975,12 +975,20 @@ function draw() {
 	wireConnectFromHoverID = null
 	wireConnectToHoverID = null
 	for(let [key, obj] of objectMap) {
-		drawObject(key)
-		if(obj.type == BLOCK) {
-				for(let i = 0; i < obj.input.length; i++) {
+		if(obj.type != WIRE)
+			drawObject(key)
+		else if(!obj.powered)
+			drawObject(key)
+		/*if(obj.type == BLOCK) {
+			for(let i = 0; i < obj.input.length; i++) {
 				obj.input[i] = false
 			}
-		}
+		}*/
+	}
+	// Render active wires on top, so that overlapping wires are shown to be active if one of them is
+	for(let [key, obj] of objectMap) {
+		if(obj.type == WIRE && obj.powered)
+			drawObject(key)
 	}
 
 	if(wireConnectFromID != null) {
