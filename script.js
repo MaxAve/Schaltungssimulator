@@ -14,23 +14,25 @@ let mouseY = 0;
 let draggedObjectID = null
 let draggedObjectMouseDiff = {x: 0, y: 0}
 
-let downloadButton = document.querySelector("#download-button")
-let renameButton = document.querySelector("#rename-button")
-let uploadConfirmButton = document.querySelector("#upload-button")
-let colorSchemeSelection = document.querySelector("#colorscheme")
-let rainbowToggle = document.querySelector("#rainbow-button")
+let downloadButton = document.getElementById("download-button")
+let renameButton = document.getElementById("rename-button")
+let uploadConfirmButton = document.getElementById("upload-button")
+let colorSchemeSelection = document.getElementById("colorscheme")
+let rainbowToggle = document.getElementById("rainbow-button")
 colorSchemeSelection.value = '1'
+let cursorTool = document.getElementById("cursor-button")
+let deleteTool = document.getElementById("delete-button")
 
-let bnot = document.querySelector("#bnot")
-let band = document.querySelector("#band")
-let bor = document.querySelector("#bor")
-let bxor = document.querySelector("#bxor")
-let bnand = document.querySelector("#bnand")
-let bnor = document.querySelector("#bnor")
-let bxnor = document.querySelector("#bxnor")
-let bkk = document.querySelector("#bkk")
-let bsch = document.querySelector("#bsch")
-let bgb = document.querySelector("#bgb")
+let bnot = document.getElementById("bnot")
+let band = document.getElementById("band")
+let bor = document.getElementById("bor")
+let bxor = document.getElementById("bxor")
+let bnand = document.getElementById("bnand")
+let bnor = document.getElementById("bnor")
+let bxnor = document.getElementById("bxnor")
+let bkk = document.getElementById("bkk")
+let bsch = document.getElementById("bsch")
+let bgb = document.getElementById("bgb")
 
 const blockSize = {x: cellSize * 5, y: cellSize * 7}
 const switchRadius = cellSize
@@ -58,6 +60,8 @@ let wireConnectFromID = null
 let wireConnectFromIndex = null
 let wireConnectToHoverID = null
 const wireFromPosition = {x: 0, x: 0}
+
+let currentCursorMode = 0
 
 // Sprites
 class Sprite {
@@ -347,16 +351,20 @@ function connectWire(from, to, objID=null) {
 function update(id) {
 	switch(objectMap.get(id).type) {
 		case WIRE:
-			switch(objectMap.get(objectMap.get(id).from).type) {
-				case WIRE:
-					objectMap.get(id).powered = objectMap.get(objectMap.get(id).from).powered
-					break
-				case BLOCK:
-					objectMap.get(id).powered = objectMap.get(objectMap.get(id).from).output[objectMap.get(id).valIndex]
-					break
-				case SWITCH:
-					objectMap.get(id).powered = objectMap.get(objectMap.get(id).from).powered
-					break
+			if(objectMap.has(objectMap.get(id).from)) {
+				switch(objectMap.get(objectMap.get(id).from).type) {
+					case WIRE:
+						objectMap.get(id).powered = objectMap.get(objectMap.get(id).from).powered
+						break
+					case BLOCK:
+						objectMap.get(id).powered = objectMap.get(objectMap.get(id).from).output[objectMap.get(id).valIndex]
+						break
+					case SWITCH:
+						objectMap.get(id).powered = objectMap.get(objectMap.get(id).from).powered
+						break
+				}
+			} else {
+				objectMap.get(id).powered = false
 			}
 			if(objectMap.get(id).powered)
 				objectMap.get(objectMap.get(id).to).input[objectMap.get(id).inIndex] = true	
@@ -474,6 +482,15 @@ function getDistance(x1, y1, x2, y2)
 	return Math.sqrt(Math.pow(x2 - x1, 2) + Math.pow(y2 - y1, 2))
 }
 
+function deleteObject(id) {
+	objectMap.delete(id)
+	for(let [key, obj] of objectMap) {
+		if(objectMap.get(key).type == WIRE && (objectMap.get(key).to == id || objectMap.get(key).from == id)) {
+			objectMap.delete(key)
+		}
+	}
+}
+
 /*
  * Event listeners
 */
@@ -510,15 +527,27 @@ canvas.addEventListener('mousedown', (event) => {
 		
 			for(let [key, obj] of objectMap) {
 				if(obj.type == 1 && worldMouseX >= obj.position.x && worldMouseY >= obj.position.y && worldMouseX <= (obj.position.x + obj.size.x) && worldMouseY <= (obj.position.y + obj.size.y)) {
-					draggedObjectID = key
-					draggedObjectMouseDiff.x = obj.position.x - mouseX
-					draggedObjectMouseDiff.y = obj.position.y - mouseY
-					draggingObject = true
+					if(currentCursorMode == 0) {
+						draggedObjectID = key
+						draggedObjectMouseDiff.x = obj.position.x - mouseX
+						draggedObjectMouseDiff.y = obj.position.y - mouseY
+						draggingObject = true
+					} else if(currentCursorMode == 1) {
+						deleteObject(key)
+					}
 				} else if(obj.type == 2 && mouseX < toScreenX(obj.position.x - 25) && mouseX > toScreenX(obj.position.x - rightSideLen * 2 - gapLen) && mouseY > toScreenY(obj.position.y - cellSize * 3) && mouseY < toScreenY(obj.position.y + cellSize / 2)/*getDistance(toScreenX(obj.position.x - rightSideLen - gapLen / 2), toScreenY(obj.position.y), mouseX, mouseY) < cellSize * 3*/) {
-					draggedObjectID = key
-					draggedObjectMouseDiff.x = obj.position.x - mouseX
-					draggedObjectMouseDiff.y = obj.position.y - mouseY
-					draggingObject = true
+					//draggedObjectID = key
+					//draggedObjectMouseDiff.x = obj.position.x - mouseX
+					//draggedObjectMouseDiff.y = obj.position.y - mouseY
+					//draggingObject = true
+					if(currentCursorMode == 0) {
+						draggedObjectID = key
+						draggedObjectMouseDiff.x = obj.position.x - mouseX
+						draggedObjectMouseDiff.y = obj.position.y - mouseY
+						draggingObject = true
+					} else if(currentCursorMode == 1) {
+						deleteObject(key)
+					}
 				}
 			}
 			if(!draggingObject) {
@@ -628,6 +657,14 @@ bsch.addEventListener("click", () => {
 bgb.addEventListener("click", () => {
 })
 
+cursorTool.addEventListener('click', () => {
+	currentCursorMode = 0 // Cursor tool
+})
+
+deleteTool.addEventListener('click', () => {
+	currentCursorMode = 1 // Delete tool	
+})
+
 let lastSelected = '1'
 
 colorSchemeSelection.addEventListener("click", () => {
@@ -663,6 +700,10 @@ colorSchemeSelection.addEventListener("click", () => {
 	}
 	lastSelected = selected
 })
+
+function mouseOverRect(x, y, w, h) {
+	return mouseX >= toScreenX(x) && mouseX <= toScreenX(x + w) && mouseY >= toScreenY(y) && mouseY <= toScreenY(y + h)
+}
 
 /*
  * GUI
@@ -766,7 +807,7 @@ function drawObject(id) {
 				ctx.arc(toScreenX(obj.position.x + obj.size.x + 10), toScreenY(obj.position.y + relY), 10, 0, 2 * Math.PI);		
 				ctx.stroke();
 
-				if(getDistance(toScreenX(obj.position.x + obj.size.x - 10), toScreenY(obj.position.y + relY), mouseX, mouseY) < 20) {
+				if(currentCursorMode == 0 && getDistance(toScreenX(obj.position.x + obj.size.x - 10), toScreenY(obj.position.y + relY), mouseX, mouseY) < 20) {
 					if(mouseDown && draggedObjectID == null)
 						connectingWires = true
 					ctx.arc(toScreenX(obj.position.x + obj.size.x + 10), toScreenY(obj.position.y + relY), 20, 0, 2 * Math.PI)
@@ -787,7 +828,7 @@ function drawObject(id) {
 				let relY = (blockHeight / obj.output.length) * (i + 0.5)
 				drawLine(obj.position.x + obj.size.x + sketchOffset.x, obj.position.y + relY + sketchOffset.y, toScreenX(obj.position.x) + obj.size.x + studLen, toScreenY(obj.position.y) + relY)
 			
-				if(getDistance(toScreenX(obj.position.x + obj.size.x - 10), toScreenY(obj.position.y + relY), mouseX, mouseY) < 20) {
+				if(currentCursorMode == 0 && getDistance(toScreenX(obj.position.x + obj.size.x - 10), toScreenY(obj.position.y + relY), mouseX, mouseY) < 20) {
 					if(mouseDown && draggedObjectID == null)
 						connectingWires = true
 					ctx.arc(toScreenX(obj.position.x + obj.size.x + 10), toScreenY(obj.position.y + relY), 20, 0, 2 * Math.PI)
@@ -812,7 +853,7 @@ function drawObject(id) {
 			ctx.lineTo(toScreenX(obj.position.x) - studLen, toScreenY(obj.position.y) + relY)
 			ctx.stroke()
 
-			if(getDistance(toScreenX(obj.position.x - 30), toScreenY(obj.position.y) + relY, mouseX, mouseY) < 20) {
+			if(currentCursorMode == 0 && getDistance(toScreenX(obj.position.x - 30), toScreenY(obj.position.y) + relY, mouseX, mouseY) < 20) {
 				if(mouseDown && draggedObjectID == null)
 					connectingWires = true
 				ctx.arc(toScreenX(obj.position.x) - studLen/2, toScreenY(obj.position.y) + relY, 20, 0, 2 * Math.PI)
@@ -828,6 +869,11 @@ function drawObject(id) {
 			ctx.strokeStyle = selectedColorScheme.dragOutline
 		} else {
 			ctx.strokeStyle = selectedColorScheme.outline
+		}
+		if(currentCursorMode == 1 && mouseOverRect(obj.position.x - cellSize, obj.position.y, blockWidth, blockHeight)) { // dont ask why its obj.position.x - cellSize
+			ctx.strokeStyle = 'red'
+			drawLine(toScreenX(obj.position.x), toScreenY(obj.position.y), toScreenX(obj.position.x + blockWidth), toScreenY(obj.position.y + blockHeight))
+			drawLine(toScreenX(obj.position.x + blockWidth), toScreenY(obj.position.y), toScreenX(obj.position.x), toScreenY(obj.position.y + blockHeight))
 		}
 		ctx.fillStyle = selectedColorScheme.textColor
 		ctx.beginPath();
@@ -862,7 +908,7 @@ function drawObject(id) {
 		ctx.fill()
 
 		// Wire connection prompt
-		if(getDistance(toScreenX(obj.position.x), toScreenY(obj.position.y), mouseX + 20, mouseY) < 20) {
+		if(currentCursorMode == 0 && getDistance(toScreenX(obj.position.x), toScreenY(obj.position.y), mouseX + 20, mouseY) < 20) {
 			if(mouseDown && draggedObjectID == null)
 				connectingWires = true
 			ctx.fillStyle = 'rgba(255, 255, 0, 0.3)'
@@ -881,37 +927,6 @@ function drawObject(id) {
 		break
 	}
 }
-
-//createObject('block', 69, 'NAND');
-//objectMap.get(69).operation = NAND 
-/*const id69 = addLogicGateBlock(GateType.NAND)
-createObject('block', 70, 'XOR');
-createObject('block', 71, 'XOR');
-objectMap.get(70).operation = XOR
-objectMap.get(71).operation = XOR
-objectMap.get(70).input.push(false)
-connectWire(id69, 70, 4)
-connectWire(id69, 71,99)
-objectMap.get(99).valIndex = 0*/
-//connectWire(69, 70, 5)
-//objectMap.get(5).inIndex = 1
-//objectMap.get(4).valIndex = 0
-//objectMap.get(5).valIndex = 0
-//objectMap.get(id69).output.pop()
-/*createObject('block', 79, 'XOR');
-connectWire(69, 79)
-connectWire(69, 79)
-connectWire(69, 79)
-createObject('block', 420, 'NOT');
-objectMap.get(420).input.push(false)
-connectWire(69, 420, 15)
-objectMap.get(15).inIndex = 1
-connectWire(79, 420)*/
-//createObject('switch', 2)
-//createObject('switch', 3)
-//connectWire(2, id69)
-//connectWire(3, id69, 23)
-//objectMap.get(23).inIndex = 1
 
 let lastExecution = new Date().getTime()
 
