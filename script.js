@@ -678,10 +678,19 @@ function drawLine(x1, y1, x2, y2) {
 function drawWire(x1, y1, x2, y2) {
 	const xDis = x2 - x1
 	const yDis = y2 - y1
-	const half = xDis / 2
-	drawLine(x1, y1, x1 + half, y1)
-	drawLine(x1 + half, y1, x1 + half, y2)
-	drawLine(x1 + half, y2, x2, y2)
+	if(x1 < x2) {
+		const half = xDis / 2
+		drawLine(x1, y1, x1 + half, y1)
+		drawLine(x1 + half, y1, x1 + half, y2)
+		drawLine(x1 + half, y2, x2, y2)
+	} else {
+		const half = yDis / 2
+		drawLine(x1, y1, x1 + cellSize, y1)
+		drawLine(x1 + cellSize, y1, x1 + cellSize, y1 + half)
+		drawLine(x1 + cellSize, y1 + half, x2 - cellSize, y1 + half)
+		drawLine(x2 - cellSize, y1 + half, x2 - cellSize, y2)	
+		drawLine(x2 - cellSize, y2, x2, y2)	
+	}
 }
 
 function drawObject(id) {

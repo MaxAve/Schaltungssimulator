@@ -36,9 +36,10 @@
 			<button title="Skizze herunterladen" class="tool-button" id="download-button" type="image">
 				<img class="logo" src="assets/dark/download.png", alt="Download">
 			</button>
-			<button title="Skizze hochladen und öffnen" class="tool-button" id="upload-button" type="image">
+			<button title="Skizze hochladen und öffnen" class="tool-button" id="upload-button" type="image" onclick="document.getElementById('file-upload-input').click()">
 				<img class="logo" src="assets/dark/upload.png", alt="Upload">
 			</button>
+			<input type="file", id="file-upload-input", style="display:none">
 			<button title="Nicht LSD" class="tool-button" id="rainbow-button" type="image">
 				<img class="logo" src="assets/dark/rainbow.png", alt="Rainbow">
 			</button>
