@@ -30,7 +30,7 @@ let bxor = document.getElementById("bxor")
 let bnand = document.getElementById("bnand")
 let bnor = document.getElementById("bnor")
 let bxnor = document.getElementById("bxnor")
-let bkk = document.getElementById("bkk")
+//let bkk = document.getElementById("bkk")
 let bsch = document.getElementById("bsch")
 let bgb = document.getElementById("bgb")
 
@@ -161,10 +161,10 @@ const colorSchemes = {
 		outline: 'white',
 		dragOutline: 'rgb(150, 150, 150)',
 		background: 'rgb(31, 43, 37)',
-		gateBackground: 'rgb(20, 36, 28)',
+		gateBackground: 'rgba(0, 0, 0, 0)',//'rgb(20, 36, 28)',
 		lineColor: 'rgb(40, 56, 48)',
 		textColor: 'white',
-		wireOnColor: '#c974b7',
+		wireOnColor: 'yellow',
 		wireOffColor: 'white',
 		menuBackground: '#181e1b',
 		menuTextColor: 'white',
@@ -324,8 +324,8 @@ function createObject(type, id=null, label=null) {
 	console.log(`Creating object of type ${type}`)
 	const obj = JSON.parse(JSON.stringify((objectPresets[type])))
 	if(obj.type > 0) {
-		obj.position.x = canvas.width / 2 + Math.floor(Math.random() * 40) - 20
-		obj.position.y = canvas.height / 2 + Math.floor(Math.random() * 40) - 20
+		obj.position.x = canvas.width - blockSize.x - cellSize - sketchOffset.x//canvas.width / 2 + Math.floor(Math.random() * 40) - 20
+		obj.position.y = Math.floor(400 + Math.random() * 100) - sketchOffset.y
 	}
 	if(label != null)
 		obj.label = label
@@ -483,10 +483,14 @@ function getDistance(x1, y1, x2, y2)
 }
 
 function deleteObject(id) {
+	console.log(`Deleting object ${id}`)
+	const type = objectMap.get(id).type
 	objectMap.delete(id)
-	for(let [key, obj] of objectMap) {
-		if(objectMap.get(key).type == WIRE && (objectMap.get(key).to == id || objectMap.get(key).from == id)) {
-			objectMap.delete(key)
+	if(type != WIRE) {
+		for(let [key, obj] of objectMap) {
+			if(objectMap.get(key).type == WIRE && (objectMap.get(key).to == id || objectMap.get(key).from == id)) {
+				deleteObject(key)
+			}
 		}
 	}
 }
@@ -566,6 +570,30 @@ canvas.addEventListener('mousedown', (event) => {
 	}
 	wireConnectFromID = wireConnectFromHoverID
 });
+
+let toDelete = null
+
+canvas.addEventListener('mouseleave', (event) => {
+	if(draggedObjectID != null) {
+		//deleteObject(draggedObjectID)
+		toDelete = draggedObjectID
+		draggedObjectID = null
+	}
+})
+
+canvas.addEventListener('mouseenter', (event) => {
+	if(toDelete != null) {
+		draggedObjectID = toDelete
+		toDelete = null
+	}
+})
+
+document.addEventListener('mouseup', (event) => {
+	if(toDelete != null) {
+		deleteObject(toDelete)	
+		toDelete = null
+	}
+})
 
 canvas.addEventListener('mouseup', (event) => {
 	mouseDown = false
@@ -647,8 +675,8 @@ bxnor.addEventListener("click", () => {
 	addLogicGateBlock(GateType.XNOR)
 })
 
-bkk.addEventListener("click", () => {
-})
+//bkk.addEventListener("click", () => {
+//})
 
 bsch.addEventListener("click", () => {
 	createObject('switch')
@@ -896,7 +924,7 @@ function drawObject(id) {
 			ctx.strokeStyle = `hsl(${wireHue}, 100%, 50%)`
 			ctx.fillStyle = `hsl(${wireHue}, 100%, 50%)`
 		}
-		drawLine(toScreenX(obj.position.x - rightSideLen - gapLen), toScreenY(obj.position.y), toScreenX(obj.position.x - rightSideLen * 2 - gapLen), toScreenY(obj.position.y))
+		drawLine(toScreenX(obj.position.x - rightSideLen - gapLen), toScreenY(obj.position.y), -20/*toScreenX(obj.position.x - rightSideLen * 2 - gapLen)*/, toScreenY(obj.position.y))
 		if(obj.powered) {
 			drawLine(toScreenX(obj.position.x - rightSideLen - gapLen), toScreenY(obj.position.y), toScreenX(obj.position.x - rightSideLen - gapLen + Math.cos(0.18) * switchLen), toScreenY(obj.position.y - Math.sin(0.18) * switchLen))
 		} else {
