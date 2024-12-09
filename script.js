@@ -515,11 +515,42 @@ canvas.addEventListener('mousemove', (event) => {
 	}
 });
 
+canvas.addEventListener("wheel", (e)  => {
+	// weird trackpad detection
+	var isTrackpad = false;
+	if (e.wheelDeltaY) {
+		if (e.wheelDeltaY === (e.deltaY * -3)) {
+			isTrackpad = true;
+		}
+	}
+	else if (e.deltaMode === 0) {
+		isTrackpad = true;
+	}
+	draggingSketch = true
+	preDragMousePos.x = mouseX
+	preDragMousePos.y = mouseY
+
+	mouseX = mouseX + e.deltaX;
+	mouseY = mouseY + e.deltaY;
+
+	dragDiff.x = preDragMousePos.x - mouseX
+	dragDiff.y = preDragMousePos.y - mouseY
+	sketchOffset.x -= dragDiff.x
+	sketchOffset.y -= dragDiff.y
+	dragDiff.x = 0
+	dragDiff.y = 0
+	preDragMousePos.x = mouseX
+	preDragMousePos.y = mouseY
+	draggingSketch = false
+
+	e.preventDefault();
+});
+
 canvas.addEventListener('mousedown', (event) => {
 	mouseDown = true
 	worldMouseX = (mouseX - sketchOffset.x) + cellSize + (mouseX - sketchOffset.x) % cellSize // TODO this is a temporary fix, find out problem (likely to do with the way objects are snapped into place)
 	worldMouseY = (mouseY - sketchOffset.y) + cellSize + (mouseY - sketchOffset.y) % cellSize
-	
+
 	// Lengths of switch parts
 	const rightSideLen = cellSize * 2
 	const gapLen = cellSize * 3
