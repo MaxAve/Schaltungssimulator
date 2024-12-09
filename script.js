@@ -902,7 +902,7 @@ function drawObject(id) {
 		}
 		// Left studs
 		for(let i = 0; i < obj.input.length; i++) {
-			ctx.strokeStyle = selectedColorScheme.outline//(obj.input[i] ? selectedColorScheme.wireOnColor : selectedColorScheme.wireOffColor) 
+			ctx.strokeStyle = (obj.input[i] ? selectedColorScheme.wireOnColor : selectedColorScheme.wireOffColor) 
 			if(obj.input[i] && rainbow) {
 				ctx.strokeStyle = `hsl(${wireHue}, 100%, 50%)`
 			}
@@ -1070,6 +1070,10 @@ function draw() {
 		}
 	}
 
+	
+	updateAllOfType(BLOCK)
+	updateAllOfType(WIRE)
+
 	wireConnectFromIndex = null
 	wireConnectFromHoverID = null
 	wireConnectToHoverID = null
@@ -1094,9 +1098,6 @@ function draw() {
 		ctx.strokeStyle = selectedColorScheme.wireOffColor
 		drawWire(wireFromPosition.x, wireFromPosition.y, mouseX, mouseY)
 	}
-	
-	updateAllOfType(WIRE)
-	updateAllOfType(BLOCK)
 		
 	sketchName = document.getElementById("name").value
 	
