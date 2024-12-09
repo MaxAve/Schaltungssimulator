@@ -530,8 +530,8 @@ canvas.addEventListener("wheel", (e)  => {
 	preDragMousePos.x = mouseX
 	preDragMousePos.y = mouseY
 
-	mouseX = mouseX + e.deltaX;
-	mouseY = mouseY + e.deltaY;
+	mouseX = mouseX - e.deltaX;
+	mouseY = mouseY - e.deltaY;
 
 	dragDiff.x = preDragMousePos.x - mouseX
 	dragDiff.y = preDragMousePos.y - mouseY
