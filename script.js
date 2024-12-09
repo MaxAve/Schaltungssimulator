@@ -21,7 +21,7 @@ let colorSchemeSelection = document.getElementById("colorscheme")
 let rainbowToggle = document.getElementById("rainbow-button")
 colorSchemeSelection.value = '1'
 let cursorTool = document.getElementById("cursor-button")
-let deleteTool = document.getElementById("delete-button")
+//let deleteTool = document.getElementById("delete-button")
 
 let bnot = document.getElementById("bnot")
 let band = document.getElementById("band")
@@ -115,7 +115,7 @@ const colorSchemes = {
 		textColor: 'black',
 		wireOnColor: 'rgb(252, 215, 27)',
 		wireOffColor: 'black',
-		menuBackground: 'rgb(245, 245, 245)',
+		menuBackground: 'rgba(245, 245, 245, 0.5)',
 		menuTextColor: 'black',
 		buttonColor: 'rgb(225, 225, 225)',
 		borderColor: 'rgb(160, 160, 160)',
@@ -132,9 +132,9 @@ const colorSchemes = {
 		textColor: 'white',
 		wireOnColor: 'rgb(249, 247, 121)',
 		wireOffColor: 'rgb(86, 45, 165)',
-		menuBackground: 'rgb(30, 30, 30)',
+		menuBackground: 'rgba(30, 30, 30, 0.5)',
 		menuTextColor: 'white',
-		buttonColor: 'rgb(48, 48, 48)',
+		buttonColor: 'rgb(58, 58, 58)',
 		borderColor: 'rgb(80, 80, 80)',
 	},
 	bnw: {
@@ -149,7 +149,7 @@ const colorSchemes = {
 		textColor: 'white',
 		wireOnColor: 'white',
 		wireOffColor: 'rgb(60, 60, 60)',
-		menuBackground: 'rgb(15, 15, 15)',
+		menuBackground: 'rgba(15, 15, 15, 0.5)',
 		menuTextColor: 'white',
 		buttonColor: 'rgb(50, 50, 50)',
 		borderColor: 'rgb(80, 80, 80)',
@@ -166,9 +166,9 @@ const colorSchemes = {
 		textColor: 'white',
 		wireOnColor: 'yellow',
 		wireOffColor: 'white',
-		menuBackground: '#181e1b',
+		menuBackground: 'rgba(22, 30, 26, 0.5)',
 		menuTextColor: 'white',
-		buttonColor: '#222b26',
+		buttonColor: 'rgb(52, 60, 56)',
 		borderColor: 'rgb(80, 80, 80)',
 	},
 	blueprint: {
@@ -213,6 +213,10 @@ function updateMenu() {
 		
 		if(selectedColorScheme.id == 3 && id == 'item-select') {
 			element.style.setProperty('background-color', selectedColorScheme.buttonColor)
+		}
+
+		if(id === 'item-select' || id === 'place-button' || _class === 'object-place') {
+			element.style.setProperty('background-color', 'rgba(0, 0, 0, 0)')
 		}
 
         for (let child of element.children) {
@@ -306,6 +310,7 @@ const objectPresets = {
 	},
 	'switch': {
 		type: 2,
+		label: 'x',
 		position: {
 			x: 0,
 			y: 0,
@@ -324,7 +329,7 @@ function createObject(type, id=null, label=null) {
 	console.log(`Creating object of type ${type}`)
 	const obj = JSON.parse(JSON.stringify((objectPresets[type])))
 	if(obj.type > 0) {
-		obj.position.x = canvas.width - blockSize.x - cellSize - sketchOffset.x//canvas.width / 2 + Math.floor(Math.random() * 40) - 20
+		obj.position.x = 400//canvas.width / 2 + Math.floor(Math.random() * 40) - 20
 		obj.position.y = Math.floor(400 + Math.random() * 100) - sketchOffset.y
 	}
 	if(label != null)
@@ -548,8 +553,8 @@ canvas.addEventListener("wheel", (e)  => {
 
 canvas.addEventListener('mousedown', (event) => {
 	mouseDown = true
-	worldMouseX = (mouseX - sketchOffset.x) + cellSize + (mouseX - sketchOffset.x) % cellSize // TODO this is a temporary fix, find out problem (likely to do with the way objects are snapped into place)
-	worldMouseY = (mouseY - sketchOffset.y) + cellSize + (mouseY - sketchOffset.y) % cellSize
+	worldMouseX = (mouseX - sketchOffset.x)// + (mouseX - sketchOffset.x) % cellSize // TODO this is a temporary fix, find out problem (likely to do with the way objects are snapped into place)
+	worldMouseY = (mouseY - sketchOffset.y)// + (mouseY - sketchOffset.y) % cellSize
 
 	// Lengths of switch parts
 	const rightSideLen = cellSize * 2
@@ -721,9 +726,9 @@ cursorTool.addEventListener('click', () => {
 	currentCursorMode = 0 // Cursor tool
 })
 
-deleteTool.addEventListener('click', () => {
+/*deleteTool.addEventListener('click', () => {
 	currentCursorMode = 1 // Delete tool	
-})
+})*/
 
 let lastSelected = '1'
 
@@ -867,7 +872,7 @@ function drawObject(id) {
 				ctx.arc(toScreenX(obj.position.x + obj.size.x + 10), toScreenY(obj.position.y + relY), 10, 0, 2 * Math.PI);		
 				ctx.stroke();
 
-				if(currentCursorMode == 0 && getDistance(toScreenX(obj.position.x + obj.size.x - 10), toScreenY(obj.position.y + relY), mouseX, mouseY) < 20) {
+				if(currentCursorMode == 0 && getDistance(toScreenX(obj.position.x + obj.size.x), toScreenY(obj.position.y + relY), mouseX, mouseY) < 20) {
 					if(mouseDown && draggedObjectID == null)
 						connectingWires = true
 					ctx.arc(toScreenX(obj.position.x + obj.size.x + 10), toScreenY(obj.position.y + relY), 20, 0, 2 * Math.PI)
@@ -888,7 +893,7 @@ function drawObject(id) {
 				let relY = (blockHeight / obj.output.length) * (i + 0.5)
 				drawLine(obj.position.x + obj.size.x + sketchOffset.x, obj.position.y + relY + sketchOffset.y, toScreenX(obj.position.x) + obj.size.x + studLen, toScreenY(obj.position.y) + relY)
 			
-				if(currentCursorMode == 0 && getDistance(toScreenX(obj.position.x + obj.size.x - 10), toScreenY(obj.position.y + relY), mouseX, mouseY) < 20) {
+				if(currentCursorMode == 0 && getDistance(toScreenX(obj.position.x + obj.size.x), toScreenY(obj.position.y + relY), mouseX, mouseY) < 20) {
 					if(mouseDown && draggedObjectID == null)
 						connectingWires = true
 					ctx.arc(toScreenX(obj.position.x + obj.size.x + 10), toScreenY(obj.position.y + relY), 20, 0, 2 * Math.PI)
@@ -913,7 +918,7 @@ function drawObject(id) {
 			ctx.lineTo(toScreenX(obj.position.x) - studLen, toScreenY(obj.position.y) + relY)
 			ctx.stroke()
 
-			if(currentCursorMode == 0 && getDistance(toScreenX(obj.position.x - 30), toScreenY(obj.position.y) + relY, mouseX, mouseY) < 20) {
+			if(currentCursorMode == 0 && getDistance(toScreenX(obj.position.x - studLen), toScreenY(obj.position.y) + relY, mouseX, mouseY) < 20) {
 				if(mouseDown && draggedObjectID == null)
 					connectingWires = true
 				ctx.arc(toScreenX(obj.position.x) - studLen/2, toScreenY(obj.position.y) + relY, 20, 0, 2 * Math.PI)
@@ -958,7 +963,7 @@ function drawObject(id) {
 			ctx.strokeStyle = `hsl(${wireHue}, 100%, 50%)`
 			ctx.fillStyle = `hsl(${wireHue}, 100%, 50%)`
 		}
-		drawLine(toScreenX(obj.position.x - rightSideLen - gapLen), toScreenY(obj.position.y), -20/*toScreenX(obj.position.x - rightSideLen * 2 - gapLen)*/, toScreenY(obj.position.y))
+
 		if(obj.powered) {
 			drawLine(toScreenX(obj.position.x - rightSideLen - gapLen), toScreenY(obj.position.y), toScreenX(obj.position.x - rightSideLen - gapLen + Math.cos(0.18) * switchLen), toScreenY(obj.position.y - Math.sin(0.18) * switchLen))
 		} else {
@@ -969,8 +974,20 @@ function drawObject(id) {
 		ctx.arc(toScreenX(obj.position.x - rightSideLen - gapLen), toScreenY(obj.position.y), cellSize / 4, 0, 2 * Math.PI)
 		ctx.fill()
 
+		ctx.strokeStyle = selectedColorScheme.outline
+		ctx.fillStyle = selectedColorScheme.textColor
+		ctx.font = "24px Arial"
+		ctx.fillText(obj.label, toScreenX(obj.position.x - gapLen - rightSideLen - cellSize - ctx.measureText(obj.label).width), toScreenY(obj.position.y - cellSize / 2));
+		
+		ctx.strokeStyle = selectedColorScheme.wireOnColor
+		if(rainbow) {
+			ctx.strokeStyle = `hsl(${wireHue}, 100%, 50%)`
+			ctx.fillStyle = `hsl(${wireHue}, 100%, 50%)`
+		}
+		drawLine(toScreenX(obj.position.x - rightSideLen - gapLen), toScreenY(obj.position.y), toScreenX(obj.position.x - rightSideLen * 2 - gapLen - ctx.measureText(obj.label).width), toScreenY(obj.position.y))
+		
 		// Wire connection prompt
-		if(currentCursorMode == 0 && getDistance(toScreenX(obj.position.x), toScreenY(obj.position.y), mouseX + 20, mouseY) < 20) {
+		if(currentCursorMode == 0 && getDistance(toScreenX(obj.position.x), toScreenY(obj.position.y), mouseX, mouseY) < 20) {
 			if(mouseDown && draggedObjectID == null)
 				connectingWires = true
 			ctx.fillStyle = 'rgba(255, 255, 0, 0.3)'
