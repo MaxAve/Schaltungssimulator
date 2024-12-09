@@ -570,7 +570,7 @@ canvas.addEventListener('mousedown', (event) => {
 					} else if(currentCursorMode == 1) {
 						deleteObject(key)
 					}
-				} else if(obj.type == 2 && mouseX < toScreenX(obj.position.x - 25) && mouseX > toScreenX(obj.position.x - rightSideLen * 2 - gapLen) && mouseY > toScreenY(obj.position.y - cellSize * 3) && mouseY < toScreenY(obj.position.y + cellSize / 2)/*getDistance(toScreenX(obj.position.x - rightSideLen - gapLen / 2), toScreenY(obj.position.y), mouseX, mouseY) < cellSize * 3*/) {
+				} else if(obj.type == 2 && mouseX < toScreenX(obj.position.x - cellSize * 3) /*&& mouseX > toScreenX(obj.position.x - rightSideLen * 2 - gapLen)*/ && mouseY > toScreenY(obj.position.y - cellSize * 3) && mouseY < toScreenY(obj.position.y + cellSize / 2)/*getDistance(toScreenX(obj.position.x - rightSideLen - gapLen / 2), toScreenY(obj.position.y), mouseX, mouseY) < cellSize * 3*/) {
 					//draggedObjectID = key
 					//draggedObjectMouseDiff.x = obj.position.x - mouseX
 					//draggedObjectMouseDiff.y = obj.position.y - mouseY
@@ -593,8 +593,9 @@ canvas.addEventListener('mousedown', (event) => {
 			break
 		case 2:
 			for(let [key, obj] of objectMap) {
-				if(obj.type == 2 && mouseX < toScreenX(obj.position.x - 25) && mouseX > toScreenX(obj.position.x - rightSideLen * 2 - gapLen) && mouseY > toScreenY(obj.position.y - cellSize * 3) && mouseY < toScreenY(obj.position.y + cellSize / 2)/*getDistance(toScreenX(obj.position.x - rightSideLen - gapLen / 2), toScreenY(obj.position.y), mouseX, mouseY) < cellSize * 3*/) {
+				if(obj.type == 2 && mouseX < toScreenX(obj.position.x - 25) && /*mouseX > toScreenX(obj.position.x - rightSideLen * 2 - gapLen) &&*/ mouseY > toScreenY(obj.position.y - cellSize * 3) && mouseY < toScreenY(obj.position.y + cellSize / 2)/*getDistance(toScreenX(obj.position.x - rightSideLen - gapLen / 2), toScreenY(obj.position.y), mouseX, mouseY) < cellSize * 3*/) {
 					obj.powered = !obj.powered
+					break
 				}
 			}
 			break
@@ -924,16 +925,18 @@ function drawObject(id) {
 			}
 		}
 
+		if(currentCursorMode == 1 && mouseOverRect(obj.position.x - cellSize, obj.position.y, blockWidth, blockHeight)) { // dont ask why its obj.position.x - cellSize
+			ctx.strokeStyle = 'red'
+			drawLine(toScreenX(obj.position.x - cellSize), toScreenY(obj.position.y + 2*cellSize), toScreenX(obj.position.x + blockWidth + cellSize), toScreenY(obj.position.y + blockHeight - 2*cellSize))
+			drawLine(toScreenX(obj.position.x + blockWidth + cellSize), toScreenY(obj.position.y + 2*cellSize), toScreenX(obj.position.x - cellSize), toScreenY(obj.position.y + blockHeight- 2*cellSize))
+		}
+
 		if(id == draggedObjectID && !connectingWires) {
 			ctx.strokeStyle = selectedColorScheme.dragOutline
 		} else {
 			ctx.strokeStyle = selectedColorScheme.outline
 		}
-		if(currentCursorMode == 1 && mouseOverRect(obj.position.x - cellSize, obj.position.y, blockWidth, blockHeight)) { // dont ask why its obj.position.x - cellSize
-			ctx.strokeStyle = 'red'
-			drawLine(toScreenX(obj.position.x), toScreenY(obj.position.y), toScreenX(obj.position.x + blockWidth), toScreenY(obj.position.y + blockHeight))
-			drawLine(toScreenX(obj.position.x + blockWidth), toScreenY(obj.position.y), toScreenX(obj.position.x), toScreenY(obj.position.y + blockHeight))
-		}
+
 		ctx.fillStyle = selectedColorScheme.textColor
 		ctx.beginPath();
 		ctx.rect(toScreenX(obj.position.x), toScreenY(obj.position.y), blockWidth, blockHeight);
@@ -983,6 +986,13 @@ function drawObject(id) {
 			//ctx.fill()
 			//ctx.fillRect(toScreenX(obj.position.x - rightSideLen - gapLen - cellSize), toScreenY(obj.position.y - gapLen), gapLen + cellSize * 2, gapLen * 1.5)
 		}*/
+
+		// Deletion
+		if(currentCursorMode == 1 && mouseX < toScreenX(obj.position.x - cellSize * 3) && mouseY > toScreenY(obj.position.y - cellSize * 3) && mouseY < toScreenY(obj.position.y + cellSize / 2)) {
+			ctx.strokeStyle = 'red'
+			drawLine(toScreenX(obj.position.x - cellSize * 6), toScreenY(obj.position.y - cellSize * 2), toScreenX(obj.position.x), toScreenY(obj.position.y + cellSize))
+			drawLine(toScreenX(obj.position.x), toScreenY(obj.position.y - cellSize * 2), toScreenX(obj.position.x - cellSize * 6), toScreenY(obj.position.y + cellSize))
+		}
 		break
 	}
 }
