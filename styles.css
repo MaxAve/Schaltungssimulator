@@ -27,7 +27,6 @@ a {
 }
 
 canvas {
-	position: absolute;
 	display: block;
 	overflow: hidden;
 }

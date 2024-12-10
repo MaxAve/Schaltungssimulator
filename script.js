@@ -504,11 +504,6 @@ function deleteObject(id) {
  * Event listeners
 */
 
-window.addEventListener('resize', (event) => {
-	canvas.width = window.innerWidth
-	canvas.height = window.innerHeight
-})
-
 canvas.addEventListener('mousemove', (event) => {
     mouseX = event.clientX;
     mouseY = event.clientY;
@@ -665,7 +660,7 @@ window.addEventListener('contextmenu', (event) => {
 });
 
 window.addEventListener('resize', (event) => {
-	canvas.width = window.innerWidth - 200
+	canvas.width = window.innerWidth
 	canvas.height = window.innerHeight
 });
 
