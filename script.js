@@ -1,8 +1,8 @@
 const canvas = document.getElementById('myCanvas')
 const ctx = canvas.getContext('2d')
 
-canvas.width = canvas.parentElement.offsetWidth
-canvas.height = canvas.parentElement.offsetHeight
+canvas.width = window.screen.width
+canvas.height = window.screen.height
 
 let sketchName = 'Unbenannte Skizze'
 
