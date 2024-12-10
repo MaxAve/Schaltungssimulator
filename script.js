@@ -1,8 +1,8 @@
 const canvas = document.getElementById('myCanvas')
 const ctx = canvas.getContext('2d')
 
-canvas.width = window.screen.width
-canvas.height = window.screen.height
+canvas.width = window.innerWidth
+canvas.height = window.innerHeight
 
 let sketchName = 'Unbenannte Skizze'
 
@@ -503,6 +503,11 @@ function deleteObject(id) {
 /*
  * Event listeners
 */
+
+window.addEventListener('resize', (event) => {
+	canvas.width = window.innerWidth
+	canvas.height = window.innerHeight
+})
 
 canvas.addEventListener('mousemove', (event) => {
     mouseX = event.clientX;

@@ -12,7 +12,6 @@ html {
 body {
 	display: flex;
 	height: 100vh;
-	text-align: center;
 	overflow: hidden;
 }
 
@@ -28,6 +27,7 @@ a {
 }
 
 canvas {
+	position: absolute;
 	display: block;
 	overflow: hidden;
 }
@@ -85,8 +85,6 @@ button:active {
 }
 
 #canvas-container {
-	width: auto;
-	height: 100%;
 	border: 0px;
 	border-style: solid;
 	border-color: rgb(120, 120, 120);
