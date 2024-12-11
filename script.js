@@ -280,6 +280,7 @@ function XNOR(input) {
 const WIRE = 0
 const BLOCK = 1
 const SWITCH = 2
+const LAMP = 3
 
 // Object presets
 const objectPresets = {
@@ -310,7 +311,16 @@ const objectPresets = {
 	},
 	'switch': {
 		type: 2,
-		label: 'x',
+		label: 'E',
+		position: {
+			x: 0,
+			y: 0,
+		},
+		powered: false,
+	},
+	'lamp': {
+		type: 3,
+		label: 'A',
 		position: {
 			x: 0,
 			y: 0,
@@ -566,27 +576,30 @@ canvas.addEventListener('mousedown', (event) => {
 			draggingObject = false
 		
 			for(let [key, obj] of objectMap) {
-				if(obj.type == 1 && worldMouseX >= obj.position.x && worldMouseY >= obj.position.y && worldMouseX <= (obj.position.x + obj.size.x) && worldMouseY <= (obj.position.y + obj.size.y)) {
+				if(obj.type == BLOCK && worldMouseX >= obj.position.x && worldMouseY >= obj.position.y && worldMouseX <= (obj.position.x + obj.size.x) && worldMouseY <= (obj.position.y + obj.size.y)) {
 					if(currentCursorMode == 0) {
 						draggedObjectID = key
 						draggedObjectMouseDiff.x = obj.position.x - mouseX
 						draggedObjectMouseDiff.y = obj.position.y - mouseY
 						draggingObject = true
-					} else if(currentCursorMode == 1) {
+					}/* else if(currentCursorMode == 1) {
 						deleteObject(key)
-					}
-				} else if(obj.type == 2 && mouseX < toScreenX(obj.position.x - cellSize * 3) /*&& mouseX > toScreenX(obj.position.x - rightSideLen * 2 - gapLen)*/ && mouseY > toScreenY(obj.position.y - cellSize * 3) && mouseY < toScreenY(obj.position.y + cellSize / 2)/*getDistance(toScreenX(obj.position.x - rightSideLen - gapLen / 2), toScreenY(obj.position.y), mouseX, mouseY) < cellSize * 3*/) {
-					//draggedObjectID = key
-					//draggedObjectMouseDiff.x = obj.position.x - mouseX
-					//draggedObjectMouseDiff.y = obj.position.y - mouseY
-					//draggingObject = true
+					}*/
+				} else if(obj.type == SWITCH && mouseX < toScreenX(obj.position.x - cellSize * 3) /*&& mouseX > toScreenX(obj.position.x - rightSideLen * 2 - gapLen)*/ && mouseY > toScreenY(obj.position.y - cellSize * 3) && mouseY < toScreenY(obj.position.y + cellSize / 2)/*getDistance(toScreenX(obj.position.x - rightSideLen - gapLen / 2), toScreenY(obj.position.y), mouseX, mouseY) < cellSize * 3*/) {
 					if(currentCursorMode == 0) {
 						draggedObjectID = key
 						draggedObjectMouseDiff.x = obj.position.x - mouseX
 						draggedObjectMouseDiff.y = obj.position.y - mouseY
 						draggingObject = true
-					} else if(currentCursorMode == 1) {
+					}/* else if(currentCursorMode == 1) {
 						deleteObject(key)
+					}*/
+				} else if(obj.type == LAMP && getDistance(obj.position.x, obj.position.y, worldMouseX, worldMouseY) <= cellSize * 1.5) {
+					if(currentCursorMode == 0) {
+						draggedObjectID = key
+						draggedObjectMouseDiff.x = obj.position.x - mouseX
+						draggedObjectMouseDiff.y = obj.position.y - mouseY
+						draggingObject = true
 					}
 				}
 			}
@@ -598,7 +611,7 @@ canvas.addEventListener('mousedown', (event) => {
 			break
 		case 2:
 			for(let [key, obj] of objectMap) {
-				if(obj.type == 2 && mouseX < toScreenX(obj.position.x - 25) && /*mouseX > toScreenX(obj.position.x - rightSideLen * 2 - gapLen) &&*/ mouseY > toScreenY(obj.position.y - cellSize * 3) && mouseY < toScreenY(obj.position.y + cellSize / 2)/*getDistance(toScreenX(obj.position.x - rightSideLen - gapLen / 2), toScreenY(obj.position.y), mouseX, mouseY) < cellSize * 3*/) {
+				if(obj.type == SWITCH && mouseX < toScreenX(obj.position.x - 25) && /*mouseX > toScreenX(obj.position.x - rightSideLen * 2 - gapLen) &&*/ mouseY > toScreenY(obj.position.y - cellSize * 3) && mouseY < toScreenY(obj.position.y + cellSize / 2)/*getDistance(toScreenX(obj.position.x - rightSideLen - gapLen / 2), toScreenY(obj.position.y), mouseX, mouseY) < cellSize * 3*/) {
 					obj.powered = !obj.powered
 					break
 				}
@@ -650,19 +663,19 @@ canvas.addEventListener('mouseup', (event) => {
 	}
 
 	wireConnectFromID = null
-});
+})
 
 window.addEventListener('keydown', (event) => {
-});
+})
 
 window.addEventListener('contextmenu', (event) => {
 	event.preventDefault() 
-});
+})
 
 window.addEventListener('resize', (event) => {
 	canvas.width = window.innerWidth
 	canvas.height = window.innerHeight
-});
+})
 
 downloadButton.addEventListener("click", () => {
 	let valueinput = save()
@@ -720,6 +733,7 @@ bsch.addEventListener("click", () => {
 })
 
 bgb.addEventListener("click", () => {
+	createObject('lamp')
 })
 
 cursorTool.addEventListener('click', () => {
@@ -1005,11 +1019,27 @@ function drawObject(id) {
 		}*/
 
 		// Deletion
-		if(currentCursorMode == 1 && mouseX < toScreenX(obj.position.x - cellSize * 3) && mouseY > toScreenY(obj.position.y - cellSize * 3) && mouseY < toScreenY(obj.position.y + cellSize / 2)) {
+		/*if(currentCursorMode == 1 && mouseX < toScreenX(obj.position.x - cellSize * 3) && mouseY > toScreenY(obj.position.y - cellSize * 3) && mouseY < toScreenY(obj.position.y + cellSize / 2)) {
 			ctx.strokeStyle = 'red'
 			drawLine(toScreenX(obj.position.x - cellSize * 6), toScreenY(obj.position.y - cellSize * 2), toScreenX(obj.position.x), toScreenY(obj.position.y + cellSize))
 			drawLine(toScreenX(obj.position.x), toScreenY(obj.position.y - cellSize * 2), toScreenX(obj.position.x - cellSize * 6), toScreenY(obj.position.y + cellSize))
+		}*/
+		break
+	case LAMP:
+		if(id == draggedObjectID && !connectingWires) {
+			ctx.strokeStyle = selectedColorScheme.dragOutline
+		} else {
+			ctx.strokeStyle = selectedColorScheme.outline
 		}
+		ctx.beginPath()
+		ctx.arc(toScreenX(obj.position.x), toScreenY(obj.position.y), cellSize * 1.5, 0, 2 * Math.PI)
+		ctx.stroke()
+		if(obj.powered) {
+			ctx.fillStyle(selectedColorScheme.wireOnColor)
+			ctx.fill()
+		}
+		drawLine(toScreenX(obj.position.x - Math.cos(0.7854) * cellSize * 1.5), toScreenY(obj.position.y - Math.cos(0.7854) * cellSize * 1.5), toScreenX(obj.position.x + Math.cos(0.7854) * cellSize * 1.5), toScreenY(obj.position.y + Math.cos(0.7854) * cellSize * 1.5))
+		drawLine(toScreenX(obj.position.x + Math.cos(0.7854) * cellSize * 1.5), toScreenY(obj.position.y - Math.cos(0.7854) * cellSize * 1.5), toScreenX(obj.position.x - Math.cos(0.7854) * cellSize * 1.5), toScreenY(obj.position.y + Math.cos(0.7854) * cellSize * 1.5))
 		break
 	}
 }
