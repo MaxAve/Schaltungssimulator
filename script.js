@@ -20,7 +20,7 @@ let uploadConfirmButton = document.getElementById("upload-button")
 let colorSchemeSelection = document.getElementById("colorscheme")
 let rainbowToggle = document.getElementById("rainbow-button")
 colorSchemeSelection.value = '1'
-let cursorTool = document.getElementById("cursor-button")
+//let cursorTool = document.getElementById("cursor-button")
 //let deleteTool = document.getElementById("delete-button")
 
 let bnot = document.getElementById("bnot")
@@ -381,14 +381,24 @@ function update(id) {
 			} else {
 				objectMap.get(id).powered = false
 			}
-			if(objectMap.get(id).powered)
-				objectMap.get(objectMap.get(id).to).input[objectMap.get(id).inIndex] = true	
+			switch(objectMap.get(objectMap.get(id).to).type) {
+				case BLOCK:
+					if(objectMap.get(id).powered)
+						objectMap.get(objectMap.get(id).to).input[objectMap.get(id).inIndex] = true
+					break
+				case LAMP:
+					if(objectMap.get(id).powered)
+						objectMap.get(objectMap.get(id).to).powered = true
+					break
+			}
 			break
 		case BLOCK:
 			objectMap.get(id).output[0] = objectMap.get(id).operation(objectMap.get(id).input)
-			// TODO this causes	studs to not be rendered with the activation color
 			for(let i = 0; i < objectMap.get(id).input.length; i++)
 				objectMap.get(id).input[i] = false
+			break
+		case LAMP:
+			objectMap.get(id).powered = false
 			break
 	}
 }
@@ -736,9 +746,9 @@ bgb.addEventListener("click", () => {
 	createObject('lamp')
 })
 
-cursorTool.addEventListener('click', () => {
+/*cursorTool.addEventListener('click', () => {
 	currentCursorMode = 0 // Cursor tool
-})
+})*/
 
 /*deleteTool.addEventListener('click', () => {
 	currentCursorMode = 1 // Delete tool	
@@ -852,6 +862,8 @@ function drawObject(id) {
 				toPos = [objectMap.get(obj.to).position.x - studLen, objectMap.get(obj.to).position.y + relY]
 			} else if(objectMap.get(obj.to).type == WIRE) {
 				toPos = [objectMap.get(obj.to).position.x, objectMap.get(obj.to).position.y]
+			} else if(objectMap.get(obj.to).type == LAMP) {
+				toPos = [objectMap.get(obj.to).position.x - cellSize * 1.5, objectMap.get(obj.to).position.y]
 			}
 		}
 		
@@ -1026,20 +1038,32 @@ function drawObject(id) {
 		}*/
 		break
 	case LAMP:
+		ctx.beginPath()
+		ctx.arc(toScreenX(obj.position.x), toScreenY(obj.position.y), cellSize * 1.5, 0, 2 * Math.PI)
+		if(obj.powered) {
+			if(rainbow) {
+				ctx.fillStyle = `hsl(${wireHue}, 100%, 50%)`
+			} else {
+				ctx.fillStyle = selectedColorScheme.wireOnColor
+			}
+			ctx.fill()
+		}
 		if(id == draggedObjectID && !connectingWires) {
 			ctx.strokeStyle = selectedColorScheme.dragOutline
 		} else {
 			ctx.strokeStyle = selectedColorScheme.outline
 		}
-		ctx.beginPath()
-		ctx.arc(toScreenX(obj.position.x), toScreenY(obj.position.y), cellSize * 1.5, 0, 2 * Math.PI)
 		ctx.stroke()
-		if(obj.powered) {
-			ctx.fillStyle(selectedColorScheme.wireOnColor)
-			ctx.fill()
-		}
 		drawLine(toScreenX(obj.position.x - Math.cos(0.7854) * cellSize * 1.5), toScreenY(obj.position.y - Math.cos(0.7854) * cellSize * 1.5), toScreenX(obj.position.x + Math.cos(0.7854) * cellSize * 1.5), toScreenY(obj.position.y + Math.cos(0.7854) * cellSize * 1.5))
 		drawLine(toScreenX(obj.position.x + Math.cos(0.7854) * cellSize * 1.5), toScreenY(obj.position.y - Math.cos(0.7854) * cellSize * 1.5), toScreenX(obj.position.x - Math.cos(0.7854) * cellSize * 1.5), toScreenY(obj.position.y + Math.cos(0.7854) * cellSize * 1.5))
+		
+		if(getDistance(toScreenX(obj.position.x), toScreenY(obj.position.y), mouseX, mouseY) <= cellSize * 1.5) {
+			ctx.beginPath()
+			ctx.arc(toScreenX(obj.position.x), toScreenY(obj.position.y), cellSize * 1.5, 0, 2 * Math.PI)
+			ctx.fillStyle = 'rgba(255, 255, 0, 0.3)'
+			ctx.fill()
+			wireConnectToHoverID = id
+		}
 		break
 	}
 }
@@ -1127,8 +1151,8 @@ function draw() {
 		}
 	}
 
-	
 	updateAllOfType(BLOCK)
+	updateAllOfType(LAMP)
 	updateAllOfType(WIRE)
 
 	wireConnectFromIndex = null
