@@ -595,7 +595,7 @@ canvas.addEventListener('mousedown', (event) => {
 					}/* else if(currentCursorMode == 1) {
 						deleteObject(key)
 					}*/
-				} else if(obj.type == SWITCH && mouseX < toScreenX(obj.position.x - cellSize * 3) /*&& mouseX > toScreenX(obj.position.x - rightSideLen * 2 - gapLen)*/ && mouseY > toScreenY(obj.position.y - cellSize * 3) && mouseY < toScreenY(obj.position.y + cellSize / 2)/*getDistance(toScreenX(obj.position.x - rightSideLen - gapLen / 2), toScreenY(obj.position.y), mouseX, mouseY) < cellSize * 3*/) {
+				} else if(obj.type == SWITCH && mouseX < toScreenX(obj.position.x - cellSize * 3) && mouseX > toScreenX(obj.position.x - rightSideLen * 2 - gapLen - cellSize) && mouseY > toScreenY(obj.position.y - cellSize * 3) && mouseY < toScreenY(obj.position.y + cellSize / 2)/*getDistance(toScreenX(obj.position.x - rightSideLen - gapLen / 2), toScreenY(obj.position.y), mouseX, mouseY) < cellSize * 3*/) {
 					if(currentCursorMode == 0) {
 						draggedObjectID = key
 						draggedObjectMouseDiff.x = obj.position.x - mouseX
@@ -1051,7 +1051,7 @@ function drawObject(id) {
 		if(id == draggedObjectID && !connectingWires) {
 			ctx.strokeStyle = selectedColorScheme.dragOutline
 		} else {
-			ctx.strokeStyle = selectedColorScheme.outline
+			ctx.strokeStyle = selectedColorScheme.wireOffColor
 		}
 		ctx.stroke()
 		drawLine(toScreenX(obj.position.x - Math.cos(0.7854) * cellSize * 1.5), toScreenY(obj.position.y - Math.cos(0.7854) * cellSize * 1.5), toScreenX(obj.position.x + Math.cos(0.7854) * cellSize * 1.5), toScreenY(obj.position.y + Math.cos(0.7854) * cellSize * 1.5))
