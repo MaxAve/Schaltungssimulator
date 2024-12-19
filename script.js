@@ -1,12 +1,16 @@
+// before you ask, yes, I have put everything in one file
+
 const canvas = document.getElementById('myCanvas')
 const ctx = canvas.getContext('2d')
 
 canvas.width = window.innerWidth
 canvas.height = window.innerHeight
 
+let ctrlDown = false
+
 let sketchName = 'Unbenannte Skizze'
 
-const cellSize = 20 // Used for the background grid
+let cellSize = 20 // Used for the background grid
 
 let mouseDown = false
 let mouseX = 0;
@@ -35,7 +39,7 @@ let bsch = document.getElementById("bsch")
 let bgb = document.getElementById("bgb")
 
 const blockSize = {x: cellSize * 5, y: cellSize * 7}
-const switchRadius = cellSize
+let switchRadius = cellSize
 
 const sketchOffset = {x: 0, y: 0}
 
@@ -63,17 +67,45 @@ const wireFromPosition = {x: 0, x: 0}
 
 let currentCursorMode = 0
 
+const trashRect = {x: canvas.width - 100, y: canvas.height - 100, width: 69, height: 69}
+
+function setScale(scale) {
+	if(cellSize <= 5) {
+		cellSize++
+		return
+	} else if(cellSize >= 30) {
+		cellSize--
+		return
+	}
+	cellSize = scale
+	blockSize.x = cellSize * 5
+	blockSize.y = cellSize * 7
+	switchRadius = cellSize
+	for(let [id, obj] of objectMap) {
+		obj.size.x = blockSize.x
+		obj.size.y = blockSize.y
+	}
+}
+
 // Sprites
 class Sprite {
 	constructor(imagePath) {
 		this.hidden = false
 		this.position = {x: 0, y: 0}
 		this.scale = {x: 1, y: 1}
-		this.image = new Image()
-		this.image.src = imagePath
+		this.currentImage = 0
+		this.images = []
+		for(let i = 0; i < imagePath.length; i++) {
+			this.images.push(new Image())
+			this.images[i].src = imagePath[i]
+		}
 		this.velocity = {x: 0, y: 0, rotation: 0}
 		this.acceleration = {x: 0, y: 0, rotation: 0}
 		this.rotation = 0
+	}
+
+	mouseOver() {
+		return mouseX >= this.position.x && mouseX <= (this.position.x + this.scale.x) && mouseY >= this.position.y && mouseY <= (this.position.y + this.scale.y)
 	}
 
 	draw() {
@@ -81,7 +113,7 @@ class Sprite {
 			ctx.save()
 			ctx.translate(this.position.x, this.position.y)
 			ctx.rotate(this.rotation)
-			ctx.drawImage(this.image, -this.image.width * this.scale.x / 2, -this.image.width * this.scale.y, this.image.width * this.scale.x, this.image.height * this.scale.y)
+			ctx.drawImage(this.images[this.currentImage], -this.images[this.currentImage].width * this.scale.x / 2, -this.images[this.currentImage].width * this.scale.y, this.images[this.currentImage].width * this.scale.x, this.images[this.currentImage].height * this.scale.y)
 			ctx.restore()
 		}
 	}
@@ -96,11 +128,17 @@ class Sprite {
 	}
 }
 
-const flashbangSprite = new Sprite('assets/flashbang.png')
+const flashbangSprite = new Sprite(['assets/flashbang.png'])
 flashbangSprite.hidden = true
 flashbangSprite.scale.x = 0.4
 flashbangSprite.scale.y = 0.4
 let grenadeLanded = false
+
+const trashCan = new Sprite(['assets/light/trash.png', 'assets/light/trash_open.png'])
+trashCan.position.x = canvas.width - 50
+trashCan.position.y = canvas.height - 50
+trashCan.scale.x = 0.69
+trashCan.scale.y = 0.69
 
 const colorSchemes = {
 	flashbang: {
@@ -636,7 +674,7 @@ let toDelete = null
 canvas.addEventListener('mouseleave', (event) => {
 	if(draggedObjectID != null) {
 		//deleteObject(draggedObjectID)
-		toDelete = draggedObjectID
+		//toDelete = draggedObjectID
 		draggedObjectID = null
 	}
 })
@@ -644,7 +682,7 @@ canvas.addEventListener('mouseleave', (event) => {
 canvas.addEventListener('mouseenter', (event) => {
 	if(toDelete != null) {
 		draggedObjectID = toDelete
-		toDelete = null
+		//toDelete = null
 	}
 })
 
@@ -676,6 +714,21 @@ canvas.addEventListener('mouseup', (event) => {
 })
 
 window.addEventListener('keydown', (event) => {
+	if(event.ctrlKey) {
+		ctrlDown = true
+	}
+	if(event.key === 'p') {
+		setScale(cellSize + 1)
+	}
+	if(event.key === 'o') {
+		setScale(cellSize - 1)
+	}
+})
+
+window.addEventListener('keyup', (event) => {
+	if(event.ctrlKey) {
+		ctrlDown = false
+	}
 })
 
 window.addEventListener('contextmenu', (event) => {
@@ -685,6 +738,9 @@ window.addEventListener('contextmenu', (event) => {
 window.addEventListener('resize', (event) => {
 	canvas.width = window.innerWidth
 	canvas.height = window.innerHeight
+	
+	trashCan.position.x = canvas.width - 50
+	trashCan.position.y = canvas.height - 50
 })
 
 downloadButton.addEventListener("click", () => {
@@ -1124,30 +1180,32 @@ function draw() {
 	ctx.fillRect(0, 0, canvas.width, canvas.height)
 
 	// Background lines
-	ctx.strokeStyle = selectedColorScheme.lineColor
-	if(selectedColorScheme.dotted) {
-		for(let i = -2 * cellSize; i <= canvas.width + cellSize; i += cellSize) {
-			for(let j = -2 * cellSize; j <= canvas.height + 2 * cellSize; j += cellSize) {
-				ctx.beginPath()
-				ctx.arc(i + (sketchOffset.x % cellSize), j + (sketchOffset.y % cellSize), 2, 0, 2 * Math.PI)
-				ctx.fillStyle = selectedColorScheme.lineColor
-				ctx.fill()
+	if(cellSize > 10) {
+		ctx.strokeStyle = selectedColorScheme.lineColor
+		if(selectedColorScheme.dotted) {
+			for(let i = -2 * cellSize; i <= canvas.width + cellSize; i += cellSize) {
+				for(let j = -2 * cellSize; j <= canvas.height + 2 * cellSize; j += cellSize) {
+					ctx.beginPath()
+					ctx.arc(i + (sketchOffset.x % cellSize), j + (sketchOffset.y % cellSize), 2, 0, 2 * Math.PI)
+					ctx.fillStyle = selectedColorScheme.lineColor
+					ctx.fill()
+				}
 			}
-		}
 
-	} else {
-		ctx.lineWidth = 1
-		for(let i = -2 * cellSize; i <= canvas.width + 2 * cellSize; i += cellSize) {
-			ctx.beginPath()
-			ctx.moveTo(i + (sketchOffset.x % cellSize), (sketchOffset.y % cellSize) - 100)
-			ctx.lineTo(i + (sketchOffset.x % cellSize), canvas.height + (sketchOffset.y % cellSize) + 100)
-			ctx.stroke()
-		}
-		for(let i = -2 * cellSize; i <= canvas.height + 2 * cellSize; i += cellSize) {
-			ctx.beginPath()
-			ctx.moveTo(sketchOffset.x % cellSize - 100, i + (sketchOffset.y % cellSize))
-			ctx.lineTo(canvas.width + (sketchOffset.x % cellSize) + 100, i + (sketchOffset.y % cellSize))
-			ctx.stroke()
+		} else {
+			ctx.lineWidth = 1
+			for(let i = -2 * cellSize; i <= canvas.width + 2 * cellSize; i += cellSize) {
+				ctx.beginPath()
+				ctx.moveTo(i + (sketchOffset.x % cellSize), (sketchOffset.y % cellSize) - 100)
+				ctx.lineTo(i + (sketchOffset.x % cellSize), canvas.height + (sketchOffset.y % cellSize) + 100)
+				ctx.stroke()
+			}
+			for(let i = -2 * cellSize; i <= canvas.height + 2 * cellSize; i += cellSize) {
+				ctx.beginPath()
+				ctx.moveTo(sketchOffset.x % cellSize - 100, i + (sketchOffset.y % cellSize))
+				ctx.lineTo(canvas.width + (sketchOffset.x % cellSize) + 100, i + (sketchOffset.y % cellSize))
+				ctx.stroke()
+			}
 		}
 	}
 
@@ -1181,9 +1239,22 @@ function draw() {
 	}
 		
 	sketchName = document.getElementById("name").value
-	
+
 	// Render sprites
 	flashbangSprite.draw()
+
+	if(mouseX > canvas.width - 100 && mouseY > canvas.height - 100) {
+		toDelete = draggedObjectID
+		trashCan.currentImage = 1
+	} else {
+		toDelete = null
+		trashCan.currentImage = 0
+	}
+	trashCan.draw()
+
+	// Trash can
+	//ctx.fillStyle = 'rgb(255, 0, 0, 0.5)'
+	//ctx.fillRect(trashRect.x, trashRect.y, trashRect.width, trashRect.height)
 
 	ctx.fillStyle = `rgb(255, 255, 255, ${flashAlpha})`
 	ctx.fillRect(0, 0, canvas.width, canvas.height)
@@ -1193,4 +1264,3 @@ function draw() {
 }
 
 draw();
-
