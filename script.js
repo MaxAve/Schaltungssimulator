@@ -744,8 +744,8 @@ window.addEventListener('resize', (event) => {
 	canvas.width = window.innerWidth
 	canvas.height = window.innerHeight
 	
-	trashCan.position.x = canvas.width - 50
-	trashCan.position.y = canvas.height - 50
+	trashCan.position.x = 50 + MENU_WIDTH
+    trashCan.position.y = canvas.height - 60
 })
 
 downloadButton.addEventListener("click", () => {
@@ -835,6 +835,8 @@ colorSchemeSelection.addEventListener("click", () => {
 					selectedColorScheme = colorSchemes.blueprint
 					break
 			}
+            trashCan.images[0].src = 'assets/light/trash.png'
+            trashCan.images[1].src = 'assets/light/trash_open.png'
 		} else {
 			flashbangSprite.hidden = false
 			flashbangSprite.position.x = -100
