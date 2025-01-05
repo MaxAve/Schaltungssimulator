@@ -1,10 +1,10 @@
-// before you ask, yes, I have put everything in one file
-
 const canvas = document.getElementById('myCanvas')
 const ctx = canvas.getContext('2d')
 
 canvas.width = window.innerWidth
 canvas.height = window.innerHeight
+
+const MENU_WIDTH = 340 // CSS width of menu
 
 let ctrlDown = false
 
@@ -135,10 +135,10 @@ flashbangSprite.scale.y = 0.4
 let grenadeLanded = false
 
 const trashCan = new Sprite(['assets/light/trash.png', 'assets/light/trash_open.png'])
-trashCan.position.x = canvas.width - 50
-trashCan.position.y = canvas.height - 50
-trashCan.scale.x = 0.69
-trashCan.scale.y = 0.69
+trashCan.position.x = 50 + MENU_WIDTH
+trashCan.position.y = canvas.height - 60
+trashCan.scale.x = 0.4
+trashCan.scale.y = 0.4
 
 const colorSchemes = {
 	flashbang: {
@@ -677,6 +677,11 @@ canvas.addEventListener('mouseleave', (event) => {
 		//toDelete = draggedObjectID
 		draggedObjectID = null
 	}
+
+    if(toDelete != null) {
+		deleteObject(toDelete)	
+		toDelete = null
+	}
 })
 
 canvas.addEventListener('mouseenter', (event) => {
@@ -1158,6 +1163,8 @@ function draw() {
 					flashAlpha = 1.8
 					selectedColorScheme = colorSchemes.flashbang
 					flashbangSprite.hidden = true
+                    trashCan.images[0].src = 'assets/dark/trash.png'
+                    trashCan.images[1].src = 'assets/dark/trash_open.png'
 					updateMenu()
 				}, 2000)
 			}
@@ -1243,7 +1250,7 @@ function draw() {
 	// Render sprites
 	flashbangSprite.draw()
 
-	if(mouseX > canvas.width - 100 && mouseY > canvas.height - 100) {
+	if(mouseX < MENU_WIDTH + 120 && mouseY > canvas.height - 140) {
 		toDelete = draggedObjectID
 		trashCan.currentImage = 1
 	} else {
@@ -1251,10 +1258,6 @@ function draw() {
 		trashCan.currentImage = 0
 	}
 	trashCan.draw()
-
-	// Trash can
-	//ctx.fillStyle = 'rgb(255, 0, 0, 0.5)'
-	//ctx.fillRect(trashRect.x, trashRect.y, trashRect.width, trashRect.height)
 
 	ctx.fillStyle = `rgb(255, 255, 255, ${flashAlpha})`
 	ctx.fillRect(0, 0, canvas.width, canvas.height)
