@@ -48,20 +48,6 @@ a {
 	bottom: 15px;
 }
 
-#menu {
-	width: 340px;
-	height: 100vh;
-	background-color: rgb(245, 245, 245);
-	/*background-image: linear-gradient(to right, rgb(225, 226, 234), white);*/
-	color: #fff;
-	display: flex;
-	flex-direction: column; 
-	justify-content: flex-start;
-	align-items: center;
-	padding-top: 1rem;
-	position: absolute;
-}
-
 button, select {
 	text-align: center;
 	border: 0px;
@@ -83,10 +69,39 @@ button:active {
 	border-color: red;
 }
 
+#menu {
+	width: 340px;
+	height: 100vh;
+	background-color: rgb(245, 245, 245);
+	/*background-image: linear-gradient(to right, rgb(225, 226, 234), white);*/
+	color: #fff;
+	display: flex;
+	flex-direction: column; 
+	justify-content: flex-start;
+	align-items: center;
+	padding-top: 1rem;
+	position: absolute;
+}
+
 #canvas-container {
 	border: 0px;
 	border-style: solid;
 	border-color: rgb(120, 120, 120);
+}
+
+#item-select {
+	margin-top: 0px;
+	margin-bottom: 10px;
+	background-color: white;
+	width: 280px;
+	height: calc(100vh - 370px);
+	border: 0px;
+	border-style: solid;
+	border-color: rgb(120, 120, 120);
+	text-align: center;
+	padding: 15px;
+	overflow-x: hidden;
+    overflow-y: auto;
 }
 
 .menuButtonWide {
@@ -114,21 +129,6 @@ button:active {
 .file-input {
 	color: black;
 	margin-bottom: 10px;
-}
-
-#item-select {
-	margin-top: 0px;
-	margin-bottom: 10px;
-	background-color: white;
-	width: 280px;
-	height: calc(100vh - 370px);
-	border: 0px;
-	border-style: solid;
-	border-color: rgb(120, 120, 120);
-	text-align: center;
-	padding: 15px;
-	overflow-x: hidden;
-    overflow-y: auto;
 }
 
 .object-place {
