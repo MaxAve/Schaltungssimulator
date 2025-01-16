@@ -18,6 +18,11 @@ let mouseY = 0;
 let draggedObjectID = null
 let draggedObjectMouseDiff = {x: 0, y: 0}
 
+let hoverObjectID = null
+let lastHoverObjectID = null
+
+let clipboardGateType = 0
+
 let downloadButton = document.getElementById("download-button")
 let renameButton = document.getElementById("rename-button")
 let uploadConfirmButton = document.getElementById("upload-button")
@@ -87,6 +92,65 @@ function setScale(scale) {
 	}
 }
 
+// Canvas click menu
+class Menu {
+	constructor(menuItems, activation) {
+		this.position = {x: canvas.width / 2, y: canvas.height / 2}
+		this.width = 150
+		this.height = 24
+		this.items = menuItems
+		this.hidden = true
+		this.activation = activation // some buttons can be disabled
+	}
+
+	draw() {
+		if(!this.hidden) {
+			for(let i = 0; i < this.items.length; i++) {
+				let mouseOver = false
+				if(this.activation[i]) {
+					mouseOver = mouseX > this.position.x && mouseX < (this.position.x + this.width) && mouseY > (this.position.y + i * this.height) && mouseY < (i * this.height + this.position.y + this.height)
+					if(mouseOver)
+						ctx.fillStyle = 'blue'
+					else
+						ctx.fillStyle = 'white'
+				} else {
+					ctx.fillStyle = '#cecece'
+				}
+				ctx.strokeStyle = 'black'
+				ctx.beginPath()
+				ctx.rect(this.position.x, this.position.y + i * this.height, this.width, this.height)
+				ctx.stroke()
+				ctx.fill()
+				if(this.activation[i]) {
+					if(mouseOver)
+						ctx.fillStyle = 'white'
+					else
+						ctx.fillStyle = 'black'
+				} else {
+					ctx.fillStyle = '#808080'
+				}
+				ctx.font = "14px Arial";
+				ctx.fillText(this.items[i], this.position.x + 5, 5 + this.height / 2 + this.position.y + i * this.height)
+			}
+		}
+	}
+
+	getMouseHoverIndex() {
+		if(!this.hidden) {
+			for(let i = 0; i < this.items.length; i++) {
+				const mouseOver = mouseX > this.position.x && mouseX < (this.position.x + this.width) && mouseY > (this.position.y + i * this.height) && mouseY < (i * this.height + this.position.y + this.height)
+				if(mouseOver && this.activation[i]) {
+					return i;
+				}
+			}
+		}
+		return -1
+	}
+}
+
+const itemEditMenu = new Menu(['Einfügen', 'Kopieren', 'Ausschneiden', 'Löschen'], [false, true, true, true])
+const canvasMenu   = new Menu(['Einfügen', 'Kopieren', 'Ausschneiden', 'Löschen'], [true, false, false, false])
+
 // Sprites
 class Sprite {
 	constructor(imagePath) {
@@ -134,11 +198,11 @@ flashbangSprite.scale.x = 0.4
 flashbangSprite.scale.y = 0.4
 let grenadeLanded = false
 
-const trashCan = new Sprite(['assets/light/trash.png', 'assets/light/trash_open.png'])
-trashCan.position.x = 50 + MENU_WIDTH
-trashCan.position.y = canvas.height - 60
-trashCan.scale.x = 0.4
-trashCan.scale.y = 0.4
+//const //trashCan = new Sprite(['assets/light/trash.png', 'assets/light/trash_open.png'])
+//trashCan.position.x = 50 + MENU_WIDTH
+//trashCan.position.y = canvas.height - 60
+//trashCan.scale.x = 0.4
+//trashCan.scale.y = 0.4
 
 const colorSchemes = {
 	flashbang: {
@@ -346,6 +410,7 @@ const objectPresets = {
 		operation: null,
 		invertsOutput: false,
 		isSquare: false,
+		gateType: null
 	},
 	'switch': {
 		type: 2,
@@ -377,8 +442,8 @@ function createObject(type, id=null, label=null) {
 	console.log(`Creating object of type ${type}`)
 	const obj = JSON.parse(JSON.stringify((objectPresets[type])))
 	if(obj.type > 0) {
-		obj.position.x = 400//canvas.width / 2 + Math.floor(Math.random() * 40) - 20
-		obj.position.y = Math.floor(400 + Math.random() * 100) - sketchOffset.y
+		obj.position.x = 400 - sketchOffset.x + Math.floor(Math.random() * 100 - 50)
+		obj.position.y = canvas.height / 2 - sketchOffset.y + Math.floor(Math.random() * 100 - 50)
 	}
 	if(label != null)
 		obj.label = label
@@ -527,6 +592,7 @@ function addLogicGateBlock(type) {
 	objectMap.get(objectID).size.y = height
 	objectMap.get(objectID).input = new Array(inputs).fill(false)
 	objectMap.get(objectID).output = new Array(outputs).fill(false)
+	objectMap.get(objectID).gateType = type
 	return objectID
 }
 
@@ -565,6 +631,22 @@ function deleteObject(id) {
 canvas.addEventListener('mousemove', (event) => {
     mouseX = event.clientX;
     mouseY = event.clientY;
+
+	hoverObjectID = null
+
+	for(let [id, obj] of objectMap) {
+		switch(obj.type) {
+			case BLOCK:
+				if(mouseX >= toScreenX(obj.position.x) 
+				&& mouseY >= toScreenY(obj.position.y)
+				&& mouseX <= (toScreenX(obj.position.x) + obj.size.x)
+				&& mouseY <= (toScreenY(obj.position.y) + obj.size.y)) {
+					hoverObjectID = id
+					lastHoverObjectID = id
+				}
+				break
+		}
+	}
 
 	if(draggingSketch && !connectingWires) {
 		dragDiff.x = preDragMousePos.x - mouseX	
@@ -618,9 +700,45 @@ canvas.addEventListener('mousedown', (event) => {
 	const rightSideLen = cellSize * 2
 	const gapLen = cellSize * 3
 	const switchLen = cellSize * 3.5
-	
+
+	console.log(itemEditMenu.getMouseHoverIndex())
+
+	switch(itemEditMenu.getMouseHoverIndex()) {
+		case -1:
+			break
+		case 1:
+			// Copy
+			clipboardGateType = objectMap.get(lastHoverObjectID).gateType
+			break
+		case 2:
+			// Cut
+			clipboardGateType = objectMap.get(lastHoverObjectID).gateType
+			deleteObject(lastHoverObjectID)
+			break
+		case 3:
+			// Delete
+			deleteObject(lastHoverObjectID)
+			break
+	}
+
+	switch(canvasMenu.getMouseHoverIndex()) {
+		case -1:
+			break
+		case 0:
+			// Paste
+			if(clipboardGateType != 0) {
+				id = addLogicGateBlock(clipboardGateType)
+				objectMap.get(id).position.x = mouseX - sketchOffset.x
+				objectMap.get(id).position.y = mouseY - sketchOffset.y
+			}
+			break
+	}
+
 	switch (event.button) {
 		case 0:
+			itemEditMenu.hidden = true
+			canvasMenu.hidden = true
+
 			draggingObject = false
 		
 			for(let [key, obj] of objectMap) {
@@ -658,6 +776,14 @@ canvas.addEventListener('mousedown', (event) => {
 			}
 			break
 		case 2:
+			itemEditMenu.position.x = mouseX
+			itemEditMenu.position.y = mouseY
+			itemEditMenu.hidden = hoverObjectID == null
+
+			canvasMenu.position.x = mouseX
+			canvasMenu.position.y = mouseY
+			canvasMenu.hidden = !itemEditMenu.hidden
+
 			for(let [key, obj] of objectMap) {
 				if(obj.type == SWITCH && mouseX < toScreenX(obj.position.x - 25) && /*mouseX > toScreenX(obj.position.x - rightSideLen * 2 - gapLen) &&*/ mouseY > toScreenY(obj.position.y - cellSize * 3) && mouseY < toScreenY(obj.position.y + cellSize / 2)/*getDistance(toScreenX(obj.position.x - rightSideLen - gapLen / 2), toScreenY(obj.position.y), mouseX, mouseY) < cellSize * 3*/) {
 					obj.powered = !obj.powered
@@ -744,8 +870,8 @@ window.addEventListener('resize', (event) => {
 	canvas.width = window.innerWidth
 	canvas.height = window.innerHeight
 	
-	trashCan.position.x = 50 + MENU_WIDTH
-    trashCan.position.y = canvas.height - 60
+	////trashCan.position.x = 50 + MENU_WIDTH
+    ////trashCan.position.y = canvas.height - 60
 })
 
 downloadButton.addEventListener("click", () => {
@@ -835,8 +961,8 @@ colorSchemeSelection.addEventListener("click", () => {
 					selectedColorScheme = colorSchemes.blueprint
 					break
 			}
-            trashCan.images[0].src = 'assets/light/trash.png'
-            trashCan.images[1].src = 'assets/light/trash_open.png'
+            ////trashCan.images[0].src = 'assets/light/trash.png'
+            ////trashCan.images[1].src = 'assets/light/trash_open.png'
 		} else {
 			flashbangSprite.hidden = false
 			flashbangSprite.position.x = -100
@@ -961,7 +1087,7 @@ function drawObject(id) {
 				ctx.arc(toScreenX(obj.position.x + obj.size.x + 10), toScreenY(obj.position.y + relY), 10, 0, 2 * Math.PI);		
 				ctx.stroke();
 
-				if(currentCursorMode == 0 && getDistance(toScreenX(obj.position.x + obj.size.x), toScreenY(obj.position.y + relY), mouseX, mouseY) < 20) {
+				if(itemEditMenu.hidden && currentCursorMode == 0 && getDistance(toScreenX(obj.position.x + obj.size.x), toScreenY(obj.position.y + relY), mouseX, mouseY) < 20) {
 					if(mouseDown && draggedObjectID == null)
 						connectingWires = true
 					ctx.arc(toScreenX(obj.position.x + obj.size.x + 10), toScreenY(obj.position.y + relY), 20, 0, 2 * Math.PI)
@@ -982,7 +1108,7 @@ function drawObject(id) {
 				let relY = (blockHeight / obj.output.length) * (i + 0.5)
 				drawLine(obj.position.x + obj.size.x + sketchOffset.x, obj.position.y + relY + sketchOffset.y, toScreenX(obj.position.x) + obj.size.x + studLen, toScreenY(obj.position.y) + relY)
 			
-				if(currentCursorMode == 0 && getDistance(toScreenX(obj.position.x + obj.size.x), toScreenY(obj.position.y + relY), mouseX, mouseY) < 20) {
+				if(itemEditMenu.hidden && currentCursorMode == 0 && getDistance(toScreenX(obj.position.x + obj.size.x), toScreenY(obj.position.y + relY), mouseX, mouseY) < 20) {
 					if(mouseDown && draggedObjectID == null)
 						connectingWires = true
 					ctx.arc(toScreenX(obj.position.x + obj.size.x + 10), toScreenY(obj.position.y + relY), 20, 0, 2 * Math.PI)
@@ -1007,7 +1133,7 @@ function drawObject(id) {
 			ctx.lineTo(toScreenX(obj.position.x) - studLen, toScreenY(obj.position.y) + relY)
 			ctx.stroke()
 
-			if(currentCursorMode == 0 && getDistance(toScreenX(obj.position.x - studLen), toScreenY(obj.position.y) + relY, mouseX, mouseY) < 20) {
+			if(itemEditMenu.hidden && currentCursorMode == 0 && getDistance(toScreenX(obj.position.x - studLen), toScreenY(obj.position.y) + relY, mouseX, mouseY) < 20) {
 				if(mouseDown && draggedObjectID == null)
 					connectingWires = true
 				ctx.arc(toScreenX(obj.position.x) - studLen/2, toScreenY(obj.position.y) + relY, 20, 0, 2 * Math.PI)
@@ -1076,7 +1202,7 @@ function drawObject(id) {
 		drawLine(toScreenX(obj.position.x - rightSideLen - gapLen), toScreenY(obj.position.y), toScreenX(obj.position.x - rightSideLen * 2 - gapLen - ctx.measureText(obj.label).width), toScreenY(obj.position.y))
 		
 		// Wire connection prompt
-		if(currentCursorMode == 0 && getDistance(toScreenX(obj.position.x), toScreenY(obj.position.y), mouseX, mouseY) < 20) {
+		if(itemEditMenu.hidden && currentCursorMode == 0 && getDistance(toScreenX(obj.position.x), toScreenY(obj.position.y), mouseX, mouseY) < 20) {
 			if(mouseDown && draggedObjectID == null)
 				connectingWires = true
 			ctx.fillStyle = 'rgba(255, 255, 0, 0.3)'
@@ -1120,7 +1246,7 @@ function drawObject(id) {
 		drawLine(toScreenX(obj.position.x - Math.cos(0.7854) * cellSize * 1.5), toScreenY(obj.position.y - Math.cos(0.7854) * cellSize * 1.5), toScreenX(obj.position.x + Math.cos(0.7854) * cellSize * 1.5), toScreenY(obj.position.y + Math.cos(0.7854) * cellSize * 1.5))
 		drawLine(toScreenX(obj.position.x + Math.cos(0.7854) * cellSize * 1.5), toScreenY(obj.position.y - Math.cos(0.7854) * cellSize * 1.5), toScreenX(obj.position.x - Math.cos(0.7854) * cellSize * 1.5), toScreenY(obj.position.y + Math.cos(0.7854) * cellSize * 1.5))
 		
-		if(getDistance(toScreenX(obj.position.x), toScreenY(obj.position.y), mouseX, mouseY) <= cellSize * 1.5) {
+		if(itemEditMenu.hidden && getDistance(toScreenX(obj.position.x), toScreenY(obj.position.y), mouseX, mouseY) <= cellSize * 1.5) {
 			ctx.beginPath()
 			ctx.arc(toScreenX(obj.position.x), toScreenY(obj.position.y), cellSize * 1.5, 0, 2 * Math.PI)
 			ctx.fillStyle = 'rgba(255, 255, 0, 0.3)'
@@ -1165,8 +1291,8 @@ function draw() {
 					flashAlpha = 1.8
 					selectedColorScheme = colorSchemes.flashbang
 					flashbangSprite.hidden = true
-                    trashCan.images[0].src = 'assets/dark/trash.png'
-                    trashCan.images[1].src = 'assets/dark/trash_open.png'
+                    ////trashCan.images[0].src = 'assets/dark/trash.png'
+                    ////trashCan.images[1].src = 'assets/dark/trash_open.png'
 					updateMenu()
 				}, 2000)
 			}
@@ -1252,17 +1378,20 @@ function draw() {
 	// Render sprites
 	flashbangSprite.draw()
 
-	if(mouseX < MENU_WIDTH + 120 && mouseY > canvas.height - 140) {
-		toDelete = draggedObjectID
-		trashCan.currentImage = 1
-	} else {
-		toDelete = null
-		trashCan.currentImage = 0
-	}
-	trashCan.draw()
+	// if(mouseX < MENU_WIDTH + 120 && mouseY > canvas.height - 140) {
+	// 	toDelete = draggedObjectID
+	// 	//trashCan.currentImage = 1
+	// } else {
+	// 	toDelete = null
+	// 	//trashCan.currentImage = 0
+	// }
+	// //trashCan.draw()
 
 	ctx.fillStyle = `rgb(255, 255, 255, ${flashAlpha})`
 	ctx.fillRect(0, 0, canvas.width, canvas.height)
+
+	itemEditMenu.draw()
+	canvasMenu.draw()
 
 	lastExecution = new Date().getTime()
 	requestAnimationFrame(draw);

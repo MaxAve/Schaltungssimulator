@@ -2,7 +2,7 @@
 	margin: 0;
 	padding: 0;
 	box-sizing: border-box;
-	font-family: Consolas, Menlo, Monaco, Lucida Console, Liberation Mono, DejaVu Sans Mono, Bitstream Vera Sans Mono, Courier New, monospace, serif;
+	font-family: Helvetica;
 }
 
 html {
@@ -16,14 +16,14 @@ body {
 }
 
 p {
-	font-size: 18px;
+	font-size: 16px;
 	color: black;
-	font-family: Consolas, Menlo, Monaco, Lucida Console, Liberation Mono, DejaVu Sans Mono, Bitstream Vera Sans Mono, Courier New, monospace, serif;
+	font-family: Helvetica;
 	margin-bottom: 5px;
 }
 
 a {
-	font-family: Consolas, Menlo, Monaco, Lucida Console, Liberation Mono, DejaVu Sans Mono, Bitstream Vera Sans Mono, Courier New, monospace, serif;
+	font-family: Helvetica;
 }
 
 canvas {
@@ -32,13 +32,13 @@ canvas {
 }
 
 label {
-	font-family: Consolas, Menlo, Monaco, Lucida Console, Liberation Mono, DejaVu Sans Mono, Bitstream Vera Sans Mono, Courier New, monospace, serif;
+	font-family: Helvetica;
 	color: black;
 }
 
 select {
 	width: 280px;
-	height: 40px;
+	height: 30px;
 	margin-bottom: 10px;
 	text-align: center;
 }
@@ -53,15 +53,15 @@ button, select {
 	border: 0px;
 	border-style: solid;
 	border-color: rgb(100, 100, 100);
-	border-radius: 15px;
-	font-size: 18px;
+	/*border-radius: 15px;*/
+	font-size: 16px;
 }
 
 button:hover, select:hover {
 	border: 1px;
 	border-style: solid;
 	border-color: rgb(100, 100, 100);
-	border-radius: 15px;
+	/*border-radius: 15px;*/
 	cursor:	pointer;
 }
 
@@ -94,7 +94,7 @@ button:active {
 	margin-bottom: 10px;
 	background-color: white;
 	width: 280px;
-	height: calc(100vh - 370px);
+	height: calc(100vh - 300px);
 	border: 0px;
 	border-style: solid;
 	border-color: rgb(120, 120, 120);
@@ -112,18 +112,18 @@ button:active {
 
 .menu-text-input {
 	width: 280px;
-	height: 40px;
+	height: 30px;
 	margin-bottom: 10px;
 	padding-left: 10px;
 	border: 0px;
 	border-style: solid;
 	border-color: rgb(100, 100, 100);
-	border-radius: 15px;
-	font-size: 18px;
+	/*border-radius: 15px;*/
+	font-size: 16px;
 }
 
 .with-margin {
-	margin-top: 20px;
+	margin-top: 10px;
 }
 
 .file-input {
@@ -140,8 +140,8 @@ button:active {
 .object-label {
 	margin-top: 0px;
 	margin-bottom: 25px;
-	font-family: Consolas, Menlo, Monaco, Lucida Console, Liberation Mono, DejaVu Sans Mono, Bitstream Vera Sans Mono, Courier New, monospace, serif;
-	font-size: 20px;
+	font-family: Helvetica;
+	font-size: 16px;
 }
 
 .place-button {
@@ -169,6 +169,6 @@ button:active {
 }
 
 .logo {
-	width: 40px;
+	width: 35px;
 	height: auto;
 }
