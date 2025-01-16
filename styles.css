@@ -94,7 +94,7 @@ button:active {
 	margin-bottom: 10px;
 	background-color: white;
 	width: 280px;
-	height: calc(100vh - 300px);
+	height: calc(100vh - 305px);
 	border: 0px;
 	border-style: solid;
 	border-color: rgb(120, 120, 120);

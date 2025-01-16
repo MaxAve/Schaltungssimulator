@@ -21,7 +21,9 @@ let draggedObjectMouseDiff = {x: 0, y: 0}
 let hoverObjectID = null
 let lastHoverObjectID = null
 
-let clipboardGateType = 0
+let clipboardObject = null
+let opClipboard = null
+//let clipboardGateType = 0
 
 let downloadButton = document.getElementById("download-button")
 let renameButton = document.getElementById("rename-button")
@@ -150,6 +152,10 @@ class Menu {
 
 const itemEditMenu = new Menu(['Einfügen', 'Kopieren', 'Ausschneiden', 'Löschen'], [false, true, true, true])
 const canvasMenu   = new Menu(['Einfügen', 'Kopieren', 'Ausschneiden', 'Löschen'], [true, false, false, false])
+
+function allMenusHidden() {
+	return itemEditMenu.hidden && canvasMenu.hidden
+}
 
 // Sprites
 class Sprite {
@@ -628,6 +634,8 @@ function deleteObject(id) {
  * Event listeners
 */
 
+//let draggableToggle = null
+
 canvas.addEventListener('mousemove', (event) => {
     mouseX = event.clientX;
     mouseY = event.clientY;
@@ -645,6 +653,26 @@ canvas.addEventListener('mousemove', (event) => {
 					lastHoverObjectID = id
 				}
 				break
+			case SWITCH:
+				const rightSideLen = cellSize * 2
+				const gapLen = cellSize * 3
+				const switchLen = cellSize * 3.5
+				if(mouseX < toScreenX(obj.position.x - cellSize * 3)
+				&& mouseX > toScreenX(obj.position.x - rightSideLen * 2 - gapLen - cellSize)
+		   		&& mouseY > toScreenY(obj.position.y - cellSize * 3)
+				&& mouseY < toScreenY(obj.position.y + cellSize)) {
+					hoverObjectID = id
+					lastHoverObjectID = id
+				}
+				break
+			case LAMP:
+				worldMouseX = (mouseX - sketchOffset.x)
+				worldMouseY = (mouseY - sketchOffset.y)
+				if(getDistance(obj.position.x, obj.position.y, worldMouseX, worldMouseY) <= cellSize * 1.5) {
+					hoverObjectID = id
+					lastHoverObjectID = id	
+				}
+				break
 		}
 	}
 
@@ -658,6 +686,19 @@ canvas.addEventListener('mousemove', (event) => {
 		preDragMousePos.x = mouseX
 		preDragMousePos.y = mouseY
 	}
+
+	/*if(draggedObjectID != null && objectMap.get(draggedObjectID).type == SWITCH) {
+		const xdiff = Math.abs(clickedSwitchLastPosX - objectMap.get(draggedObjectID).position.x)
+		const ydiff = Math.abs(clickedSwitchLastPosY - objectMap.get(draggedObjectID).position.y)
+		console.log(ydiff)
+		if(xdiff < cellSize && ydiff < cellSize) {
+			draggableToggle = draggedObjectID
+			console.log('rawr: ' + draggableToggle)
+		} else {
+			//draggableToggle = null
+		}
+		//console.log(draggableToggle)
+	}*/
 });
 
 canvas.addEventListener("wheel", (e)  => {
@@ -691,6 +732,15 @@ canvas.addEventListener("wheel", (e)  => {
 	e.preventDefault();
 });
 
+let clickedSwitchLastPosX
+let clickedSwitchLastPosY
+let switchToSwitch = null // naming conventions go brr
+
+function copyObj(obj) {
+	const c = JSON.parse(JSON.stringify(obj))
+	return c
+}
+
 canvas.addEventListener('mousedown', (event) => {
 	mouseDown = true
 	worldMouseX = (mouseX - sketchOffset.x)// + (mouseX - sketchOffset.x) % cellSize // TODO this is a temporary fix, find out problem (likely to do with the way objects are snapped into place)
@@ -701,18 +751,23 @@ canvas.addEventListener('mousedown', (event) => {
 	const gapLen = cellSize * 3
 	const switchLen = cellSize * 3.5
 
-	console.log(itemEditMenu.getMouseHoverIndex())
 
 	switch(itemEditMenu.getMouseHoverIndex()) {
 		case -1:
 			break
 		case 1:
 			// Copy
-			clipboardGateType = objectMap.get(lastHoverObjectID).gateType
+			clipboardObject = copyObj(objectMap.get(lastHoverObjectID))
+			if(clipboardObject.type == BLOCK) {
+				opClipboard = objectMap.get(lastHoverObjectID).operation
+			}
 			break
 		case 2:
 			// Cut
-			clipboardGateType = objectMap.get(lastHoverObjectID).gateType
+			clipboardObject = copyObj(objectMap.get(lastHoverObjectID))
+			if(clipboardObject.type == BLOCK) {
+				opClipboard = objectMap.get(lastHoverObjectID).operation
+			}
 			deleteObject(lastHoverObjectID)
 			break
 		case 3:
@@ -726,11 +781,19 @@ canvas.addEventListener('mousedown', (event) => {
 			break
 		case 0:
 			// Paste
-			if(clipboardGateType != 0) {
+			const obj = copyObj(clipboardObject)
+			if(obj.type == BLOCK) {
+				obj.operation = opClipboard
+			}
+			const id = genID()
+			obj.position.x = mouseX - sketchOffset.x
+			obj.position.y = mouseY - sketchOffset.y
+			objectMap.set(id, obj)
+			/*if(clipboardGateType != 0) {
 				id = addLogicGateBlock(clipboardGateType)
 				objectMap.get(id).position.x = mouseX - sketchOffset.x
 				objectMap.get(id).position.y = mouseY - sketchOffset.y
-			}
+			}*/
 			break
 	}
 
@@ -751,12 +814,13 @@ canvas.addEventListener('mousedown', (event) => {
 					}/* else if(currentCursorMode == 1) {
 						deleteObject(key)
 					}*/
-				} else if(obj.type == SWITCH && mouseX < toScreenX(obj.position.x - cellSize * 3) && mouseX > toScreenX(obj.position.x - rightSideLen * 2 - gapLen - cellSize) && mouseY > toScreenY(obj.position.y - cellSize * 3) && mouseY < toScreenY(obj.position.y + cellSize / 2)/*getDistance(toScreenX(obj.position.x - rightSideLen - gapLen / 2), toScreenY(obj.position.y), mouseX, mouseY) < cellSize * 3*/) {
+				} else if(obj.type == SWITCH && mouseX < toScreenX(obj.position.x - cellSize * 3) && mouseX > toScreenX(obj.position.x - rightSideLen * 2 - gapLen - cellSize) && mouseY > toScreenY(obj.position.y - cellSize * 3) && mouseY < toScreenY(obj.position.y + cellSize)/*getDistance(toScreenX(obj.position.x - rightSideLen - gapLen / 2), toScreenY(obj.position.y), mouseX, mouseY) < cellSize * 3*/) {
 					if(currentCursorMode == 0) {
+						draggingObject = true
 						draggedObjectID = key
 						draggedObjectMouseDiff.x = obj.position.x - mouseX
 						draggedObjectMouseDiff.y = obj.position.y - mouseY
-						draggingObject = true
+						obj.powered = !obj.powered
 					}/* else if(currentCursorMode == 1) {
 						deleteObject(key)
 					}*/
@@ -784,12 +848,7 @@ canvas.addEventListener('mousedown', (event) => {
 			canvasMenu.position.y = mouseY
 			canvasMenu.hidden = !itemEditMenu.hidden
 
-			for(let [key, obj] of objectMap) {
-				if(obj.type == SWITCH && mouseX < toScreenX(obj.position.x - 25) && /*mouseX > toScreenX(obj.position.x - rightSideLen * 2 - gapLen) &&*/ mouseY > toScreenY(obj.position.y - cellSize * 3) && mouseY < toScreenY(obj.position.y + cellSize / 2)/*getDistance(toScreenX(obj.position.x - rightSideLen - gapLen / 2), toScreenY(obj.position.y), mouseX, mouseY) < cellSize * 3*/) {
-					obj.powered = !obj.powered
-					break
-				}
-			}
+
 			break
 	}
 	wireConnectFromID = wireConnectFromHoverID
@@ -825,6 +884,14 @@ document.addEventListener('mouseup', (event) => {
 })
 
 canvas.addEventListener('mouseup', (event) => {
+	//console.log(draggableToggle)
+	//if(draggableToggle != null) {
+	//	objectMap.get(draggableToggle).powered = !objectMap.get(draggableToggle).powered
+	//}
+
+	clickedSwitchLastPosX = null
+	clickedSwitchLastPosY = null
+	
 	mouseDown = false
 	draggingSketch = false
 	if(draggedObjectID != null) {
@@ -1087,7 +1154,7 @@ function drawObject(id) {
 				ctx.arc(toScreenX(obj.position.x + obj.size.x + 10), toScreenY(obj.position.y + relY), 10, 0, 2 * Math.PI);		
 				ctx.stroke();
 
-				if(itemEditMenu.hidden && currentCursorMode == 0 && getDistance(toScreenX(obj.position.x + obj.size.x), toScreenY(obj.position.y + relY), mouseX, mouseY) < 20) {
+				if(allMenusHidden() && currentCursorMode == 0 && getDistance(toScreenX(obj.position.x + obj.size.x), toScreenY(obj.position.y + relY), mouseX, mouseY) < 20) {
 					if(mouseDown && draggedObjectID == null)
 						connectingWires = true
 					ctx.arc(toScreenX(obj.position.x + obj.size.x + 10), toScreenY(obj.position.y + relY), 20, 0, 2 * Math.PI)
@@ -1108,7 +1175,7 @@ function drawObject(id) {
 				let relY = (blockHeight / obj.output.length) * (i + 0.5)
 				drawLine(obj.position.x + obj.size.x + sketchOffset.x, obj.position.y + relY + sketchOffset.y, toScreenX(obj.position.x) + obj.size.x + studLen, toScreenY(obj.position.y) + relY)
 			
-				if(itemEditMenu.hidden && currentCursorMode == 0 && getDistance(toScreenX(obj.position.x + obj.size.x), toScreenY(obj.position.y + relY), mouseX, mouseY) < 20) {
+				if(allMenusHidden() && currentCursorMode == 0 && getDistance(toScreenX(obj.position.x + obj.size.x), toScreenY(obj.position.y + relY), mouseX, mouseY) < 20) {
 					if(mouseDown && draggedObjectID == null)
 						connectingWires = true
 					ctx.arc(toScreenX(obj.position.x + obj.size.x + 10), toScreenY(obj.position.y + relY), 20, 0, 2 * Math.PI)
@@ -1133,7 +1200,7 @@ function drawObject(id) {
 			ctx.lineTo(toScreenX(obj.position.x) - studLen, toScreenY(obj.position.y) + relY)
 			ctx.stroke()
 
-			if(itemEditMenu.hidden && currentCursorMode == 0 && getDistance(toScreenX(obj.position.x - studLen), toScreenY(obj.position.y) + relY, mouseX, mouseY) < 20) {
+			if(allMenusHidden() && currentCursorMode == 0 && getDistance(toScreenX(obj.position.x - studLen), toScreenY(obj.position.y) + relY, mouseX, mouseY) < 20) {
 				if(mouseDown && draggedObjectID == null)
 					connectingWires = true
 				ctx.arc(toScreenX(obj.position.x) - studLen/2, toScreenY(obj.position.y) + relY, 20, 0, 2 * Math.PI)
@@ -1202,7 +1269,7 @@ function drawObject(id) {
 		drawLine(toScreenX(obj.position.x - rightSideLen - gapLen), toScreenY(obj.position.y), toScreenX(obj.position.x - rightSideLen * 2 - gapLen - ctx.measureText(obj.label).width), toScreenY(obj.position.y))
 		
 		// Wire connection prompt
-		if(itemEditMenu.hidden && currentCursorMode == 0 && getDistance(toScreenX(obj.position.x), toScreenY(obj.position.y), mouseX, mouseY) < 20) {
+		if(allMenusHidden() && currentCursorMode == 0 && getDistance(toScreenX(obj.position.x), toScreenY(obj.position.y), mouseX, mouseY) < 20) {
 			if(mouseDown && draggedObjectID == null)
 				connectingWires = true
 			ctx.fillStyle = 'rgba(255, 255, 0, 0.3)'
@@ -1246,7 +1313,7 @@ function drawObject(id) {
 		drawLine(toScreenX(obj.position.x - Math.cos(0.7854) * cellSize * 1.5), toScreenY(obj.position.y - Math.cos(0.7854) * cellSize * 1.5), toScreenX(obj.position.x + Math.cos(0.7854) * cellSize * 1.5), toScreenY(obj.position.y + Math.cos(0.7854) * cellSize * 1.5))
 		drawLine(toScreenX(obj.position.x + Math.cos(0.7854) * cellSize * 1.5), toScreenY(obj.position.y - Math.cos(0.7854) * cellSize * 1.5), toScreenX(obj.position.x - Math.cos(0.7854) * cellSize * 1.5), toScreenY(obj.position.y + Math.cos(0.7854) * cellSize * 1.5))
 		
-		if(itemEditMenu.hidden && getDistance(toScreenX(obj.position.x), toScreenY(obj.position.y), mouseX, mouseY) <= cellSize * 1.5) {
+		if(allMenusHidden() && getDistance(toScreenX(obj.position.x), toScreenY(obj.position.y), mouseX, mouseY) <= cellSize * 1.5) {
 			ctx.beginPath()
 			ctx.arc(toScreenX(obj.position.x), toScreenY(obj.position.y), cellSize * 1.5, 0, 2 * Math.PI)
 			ctx.fillStyle = 'rgba(255, 255, 0, 0.3)'
