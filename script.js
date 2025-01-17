@@ -26,6 +26,7 @@ let opClipboard = null
 //let clipboardGateType = 0
 
 let downloadButton = document.getElementById("download-button")
+let uploadButton = document.getElementById("file-upload-input")
 let renameButton = document.getElementById("rename-button")
 let uploadConfirmButton = document.getElementById("upload-button")
 let colorSchemeSelection = document.getElementById("colorscheme")
@@ -490,6 +491,7 @@ function update(id) {
 			} else {
 				objectMap.get(id).powered = false
 			}
+			//console.log(objectMap.get(objectMap.get(id).to))
 			switch(objectMap.get(objectMap.get(id).to).type) {
 				case BLOCK:
 					if(objectMap.get(id).powered)
@@ -949,6 +951,51 @@ downloadButton.addEventListener("click", () => {
     anele.setAttribute("download", `${sketchName}.json`);
     anele.href = url;
     anele.click();
+})
+
+uploadButton.addEventListener('change', () => {
+	var file = uploadButton.files[0];
+	if (file) {
+		var reader = new FileReader();
+		reader.readAsText(file, "UTF-8");
+		reader.onload = function (evt) {
+			const fileData = evt.target.result
+			const loadedMap = JSON.parse(fileData)
+			objectMap.clear()
+			for(let key in loadedMap) {
+				const id = parseInt(key, 10)
+				objectMap.set(id, loadedMap[key])
+				if(objectMap.get(id).type === 1) {
+					switch(objectMap.get(id).gateType) {
+						case GateType.NOT:
+							objectMap.get(id).operation = NOT
+							break
+						case GateType.AND:
+							objectMap.get(id).operation = AND
+							break
+						case GateType.OR:
+							objectMap.get(id).operation = OR
+							break
+						case GateType.NAND:
+							objectMap.get(id).operation = NAND
+							break
+						case GateType.NOR:
+							objectMap.get(id).operation = NOR
+							break
+						case GateType.XOR:
+							objectMap.get(id).operation = XOR
+							break
+						case GateType.XNOR:
+							objectMap.get(id).operation = XNOR
+							break
+					}
+				}
+			}
+		}
+		reader.onerror = function (evt) {
+			console.log('womp womp :(')
+		}
+	}
 })
 
 /*uploadConfirmButton.addEventListener("click", () => {
