@@ -7,6 +7,7 @@ canvas.height = window.innerHeight
 const MENU_WIDTH = 340 // CSS width of menu
 
 let ctrlDown = false
+let shiftDown = false
 
 let sketchName = 'Unbenannte Skizze'
 
@@ -18,12 +19,14 @@ let mouseY = 0;
 let draggedObjectID = null
 let draggedObjectMouseDiff = {x: 0, y: 0}
 
+const multiSelectObjects = new Map() // TODO implements
+const multiSelectObjectClipboard = new Map()
+
 let hoverObjectID = null
 let lastHoverObjectID = null
 
 let clipboardObject = null
 let opClipboard = null
-//let clipboardGateType = 0
 
 let downloadButton = document.getElementById("download-button")
 let uploadButton = document.getElementById("file-upload-input")
@@ -32,8 +35,6 @@ let uploadConfirmButton = document.getElementById("upload-button")
 let colorSchemeSelection = document.getElementById("colorscheme")
 let rainbowToggle = document.getElementById("rainbow-button")
 colorSchemeSelection.value = '1'
-//let cursorTool = document.getElementById("cursor-button")
-//let deleteTool = document.getElementById("delete-button")
 
 let bnot = document.getElementById("bnot")
 let band = document.getElementById("band")
@@ -42,7 +43,6 @@ let bxor = document.getElementById("bxor")
 let bnand = document.getElementById("bnand")
 let bnor = document.getElementById("bnor")
 let bxnor = document.getElementById("bxnor")
-//let bkk = document.getElementById("bkk")
 let bsch = document.getElementById("bsch")
 let bgb = document.getElementById("bgb")
 
@@ -743,6 +743,22 @@ function copyObj(obj) {
 	return c
 }
 
+function addObjectToMultiSelect(objID) {
+	multiSelectObjects.set(objID, copyObj(objectMap.get(objID)))
+	// Add wires if we find a wire that connects two gates that exist in the map
+	for(let [id, obj] of objectMap) {
+		if(obj.type == WIRE && multiSelectObjects.has(obj.from) && multiSelectObjects.has(obj.to)) {
+			multiSelectObjects.set(id, copyObj(obj))
+		}
+	}
+}
+
+function copyMultiSelectObjectsToClipboard() {
+	for(let [id, obj] of multiSelectObjects) {
+		multiSelectObjectClipboard.set(id, copyObj(obj))
+	}
+}
+
 canvas.addEventListener('mousedown', (event) => {
 	mouseDown = true
 	worldMouseX = (mouseX - sketchOffset.x)// + (mouseX - sketchOffset.x) % cellSize // TODO this is a temporary fix, find out problem (likely to do with the way objects are snapped into place)
@@ -759,22 +775,40 @@ canvas.addEventListener('mousedown', (event) => {
 			break
 		case 1:
 			// Copy
-			clipboardObject = copyObj(objectMap.get(lastHoverObjectID))
-			if(clipboardObject.type == BLOCK) {
-				opClipboard = objectMap.get(lastHoverObjectID).operation
-			}
+			if(multiSelectObjects.size === 0) {
+				clipboardObject = copyObj(objectMap.get(lastHoverObjectID))
+				if(clipboardObject.type == BLOCK) {
+					opClipboard = objectMap.get(lastHoverObjectID).operation
+				}
+				multiSelectObjectClipboard.clear()
+			} else {
+				clipboardObject = null
+				copyMultiSelectObjectsToClipboard()
+			} 
 			break
 		case 2:
 			// Cut
-			clipboardObject = copyObj(objectMap.get(lastHoverObjectID))
-			if(clipboardObject.type == BLOCK) {
-				opClipboard = objectMap.get(lastHoverObjectID).operation
+			if(multiSelectObjects.size === 0) {
+				clipboardObject = copyObj(objectMap.get(lastHoverObjectID))
+				if(clipboardObject.type == BLOCK) {
+					opClipboard = objectMap.get(lastHoverObjectID).operation
+				}
+				multiSelectObjectClipboard.clear()
+				deleteObject(lastHoverObjectID)
+			} else {
+				clipboardObject = null
+				copyMultiSelectObjectsToClipboard()
 			}
-			deleteObject(lastHoverObjectID)
 			break
 		case 3:
 			// Delete
-			deleteObject(lastHoverObjectID)
+			if(multiSelectObjects.size === 0) {
+				deleteObject(lastHoverObjectID)
+			} else {
+				for(let [id, obj] of multiSelectObjects) {
+					deleteObject(id)
+				}
+			}
 			break
 	}
 
@@ -783,63 +817,102 @@ canvas.addEventListener('mousedown', (event) => {
 			break
 		case 0:
 			// Paste
-			const obj = copyObj(clipboardObject)
-			if(obj.type == BLOCK) {
-				obj.operation = opClipboard
+			if(multiSelectObjectClipboard.size === 0) {
+				const obj = copyObj(clipboardObject)
+				if(obj.type == BLOCK) {
+					obj.operation = opClipboard
+				}
+				const id = genID()
+				obj.position.x = mouseX - sketchOffset.x
+				obj.position.y = mouseY - sketchOffset.y
+				objectMap.set(id, obj)
+			} else {
+				if(clipboardObject == null) {
+					let minX = 999999999
+					let minY = 999999999
+					for(let [sid, sobj] of multiSelectObjectClipboard) {
+						if(sobj.position) {
+							minX = Math.min(minX, sobj.position.x)
+							minY = Math.min(minY, sobj.position.y)
+						}
+					}
+					console.log(multiSelectObjectClipboard)
+					for(let [sid, sobj] of multiSelectObjectClipboard) {
+						const obj = copyObj(objectMap.get(sid))
+						if(obj.type == BLOCK) {
+							obj.operation = objectMap.get(sid).operation
+						}
+						const id = genID()
+						if(obj.position) {
+							obj.position.x = mouseX - sketchOffset.x + (sobj.position.x - minX)
+							obj.position.y = mouseY - sketchOffset.y + (sobj.position.y - minY)
+							console.log(obj.position)
+						}
+						objectMap.set(id, obj)
+					}
+					multiSelectObjects.clear()
+				}
 			}
-			const id = genID()
-			obj.position.x = mouseX - sketchOffset.x
-			obj.position.y = mouseY - sketchOffset.y
-			objectMap.set(id, obj)
-			/*if(clipboardGateType != 0) {
-				id = addLogicGateBlock(clipboardGateType)
-				objectMap.get(id).position.x = mouseX - sketchOffset.x
-				objectMap.get(id).position.y = mouseY - sketchOffset.y
-			}*/
 			break
 	}
 
 	switch (event.button) {
-		case 0:
+		case 0: // Left click
 			itemEditMenu.hidden = true
 			canvasMenu.hidden = true
 
 			draggingObject = false
-		
+			let objectClicked = false
+
 			for(let [key, obj] of objectMap) {
 				if(obj.type == BLOCK && worldMouseX >= obj.position.x && worldMouseY >= obj.position.y && worldMouseX <= (obj.position.x + obj.size.x) && worldMouseY <= (obj.position.y + obj.size.y)) {
-					if(currentCursorMode == 0) {
+					objectClicked = true
+					if(!shiftDown) {
 						draggedObjectID = key
 						draggedObjectMouseDiff.x = obj.position.x - mouseX
 						draggedObjectMouseDiff.y = obj.position.y - mouseY
 						draggingObject = true
-					}/* else if(currentCursorMode == 1) {
-						deleteObject(key)
-					}*/
+					} else {
+						addObjectToMultiSelect(key)
+						console.log('Multi select!')
+					}
 				} else if(obj.type == SWITCH && mouseX < toScreenX(obj.position.x - cellSize * 3) && mouseX > toScreenX(obj.position.x - rightSideLen * 2 - gapLen - cellSize) && mouseY > toScreenY(obj.position.y - cellSize * 3) && mouseY < toScreenY(obj.position.y + cellSize)/*getDistance(toScreenX(obj.position.x - rightSideLen - gapLen / 2), toScreenY(obj.position.y), mouseX, mouseY) < cellSize * 3*/) {
-					if(currentCursorMode == 0) {
+					objectClicked = true
+					if(!shiftDown) {
 						draggingObject = true
 						draggedObjectID = key
 						draggedObjectMouseDiff.x = obj.position.x - mouseX
 						draggedObjectMouseDiff.y = obj.position.y - mouseY
 						obj.powered = !obj.powered
-					}/* else if(currentCursorMode == 1) {
-						deleteObject(key)
-					}*/
+					} else {
+						addObjectToMultiSelect(key)
+						console.log('Multi select!')
+					}
 				} else if(obj.type == LAMP && getDistance(obj.position.x, obj.position.y, worldMouseX, worldMouseY) <= cellSize * 1.5) {
-					if(currentCursorMode == 0) {
+					objectClicked = true
+					if(!shiftDown) {
 						draggedObjectID = key
 						draggedObjectMouseDiff.x = obj.position.x - mouseX
 						draggedObjectMouseDiff.y = obj.position.y - mouseY
 						draggingObject = true
+					} else {
+						addObjectToMultiSelect(key)
+						console.log('Multi select!')
 					}
-				}
+				} 
 			}
+
 			if(!draggingObject) {
 				draggingSketch = true
 				preDragMousePos.x = mouseX
 				preDragMousePos.y = mouseY
 			}
+
+			if(!objectClicked && multiSelectObjects.size > 0) {
+				multiSelectObjects.clear()
+				console.log('Clear multi select')
+			}
+
 			break
 		case 2:
 			itemEditMenu.position.x = mouseX
@@ -914,18 +987,20 @@ canvas.addEventListener('mouseup', (event) => {
 })
 
 window.addEventListener('keydown', (event) => {
+	shiftDown = event.shiftKey
 	if(event.ctrlKey) {
 		ctrlDown = true
 	}
-	if(event.key === 'p') {
+	/*if(event.key === 'p') {
 		setScale(cellSize + 1)
 	}
 	if(event.key === 'o') {
 		setScale(cellSize - 1)
-	}
+	}*/
 })
 
 window.addEventListener('keyup', (event) => {
+	shiftDown = event.shiftKey
 	if(event.ctrlKey) {
 		ctrlDown = false
 	}
@@ -936,6 +1011,7 @@ window.addEventListener('contextmenu', (event) => {
 })
 
 window.addEventListener('resize', (event) => {
+	// Update canvas size on window resize
 	canvas.width = window.innerWidth
 	canvas.height = window.innerHeight
 	
@@ -1191,6 +1267,7 @@ function drawObject(id) {
 		const blockWidth = obj.size.x
 		const blockHeight = obj.isSquare ? obj.size.x : obj.size.y
 		ctx.fillRect(toScreenX(obj.position.x), toScreenY(obj.position.y), blockWidth, blockHeight)
+
 		ctx.strokeStyle = selectedColorScheme.outline
 		ctx.fillStyle = selectedColorScheme.textColor
 		ctx.font = "32px Arial";
@@ -1277,16 +1354,28 @@ function drawObject(id) {
 			drawLine(toScreenX(obj.position.x + blockWidth + cellSize), toScreenY(obj.position.y + 2*cellSize), toScreenX(obj.position.x - cellSize), toScreenY(obj.position.y + blockHeight- 2*cellSize))
 		}
 
+		const isSelected = multiSelectObjects.has(id)
+
 		if(id == draggedObjectID && !connectingWires) {
 			ctx.strokeStyle = selectedColorScheme.dragOutline
 		} else {
-			ctx.strokeStyle = selectedColorScheme.outline
+			if(isSelected) {
+				ctx.strokeStyle = 'rgb(0, 0, 255)'
+			} else {
+				ctx.strokeStyle = selectedColorScheme.outline
+			}
 		}
 
 		ctx.fillStyle = selectedColorScheme.textColor
 		ctx.beginPath();
 		ctx.rect(toScreenX(obj.position.x), toScreenY(obj.position.y), blockWidth, blockHeight);
 		ctx.stroke()
+
+		if(isSelected) {
+			ctx.fillStyle = 'rgba(0, 0, 255, 0.2)'
+			ctx.fillRect(toScreenX(obj.position.x), toScreenY(obj.position.y), blockWidth, blockHeight)
+		}
+
 		break
 	case SWITCH:
 		const rightSideLen = cellSize * 2
