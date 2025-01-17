@@ -962,9 +962,19 @@ uploadButton.addEventListener('change', () => {
 			const fileData = evt.target.result
 			const loadedMap = JSON.parse(fileData)
 			objectMap.clear()
+			minX =  999999999
+			maxX = -999999999
+			minY =  999999999
+			maxY = -999999999
 			for(let key in loadedMap) {
 				const id = parseInt(key, 10)
 				objectMap.set(id, loadedMap[key])
+				if(objectMap.get(id).position) {
+					minX = Math.min(minX, objectMap.get(id).position.x)
+					minY = Math.min(minY, objectMap.get(id).position.y)
+					maxX = Math.max(maxX, objectMap.get(id).position.x)
+					maxY = Math.max(maxY, objectMap.get(id).position.y)
+				}
 				if(objectMap.get(id).type === 1) {
 					switch(objectMap.get(id).gateType) {
 						case GateType.NOT:
@@ -991,6 +1001,8 @@ uploadButton.addEventListener('change', () => {
 					}
 				}
 			}
+			sketchOffset.x = minX + (maxX - minX) / 2
+			sketchOffset.y = minY + (maxY - minY) / 2
 		}
 		reader.onerror = function (evt) {
 			console.log('womp womp :(')
