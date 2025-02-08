@@ -1,174 +1,185 @@
 * {
-	margin: 0;
-	padding: 0;
-	box-sizing: border-box;
-	font-family: Helvetica;
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: Helvetica;
 }
 
 html {
-	overflow: hidden;
+    overflow: hidden;
 }
 
 body {
-	display: flex;
-	height: 100vh;
-	overflow: hidden;
+    display: flex;
+    height: 100vh;
+    overflow: hidden;
 }
 
 p {
-	font-size: 16px;
-	color: black;
-	font-family: Helvetica;
-	margin-bottom: 5px;
+    font-size: 16px;
+    color: black;
+    font-family: Helvetica;
+    margin-bottom: 5px;
 }
 
 a {
-	font-family: Helvetica;
+    font-family: Helvetica;
 }
 
 canvas {
-	display: block;
-	overflow: hidden;
+    display: block;
+    overflow: hidden;
 }
 
 label {
-	font-family: Helvetica;
-	color: black;
+    font-family: Helvetica;
+    color: black;
 }
 
 select {
-	width: 280px;
-	height: 30px;
-	margin-bottom: 10px;
-	text-align: center;
+    width: 280px;
+    height: 30px;
+    margin-bottom: 10px;
+    text-align: center;
 }
 
 a {
-	position: absolute;
-	bottom: 15px;
+    position: absolute;
+    bottom: 15px;
 }
 
-button, select {
-	text-align: center;
-	border: 3px;
-	border-style: solid;
-	border-color: rgb(100, 100, 100);
-	/*border-radius: 15px;*/
-	font-size: 16px;
+button,
+select {
+    text-align: center;
+    border: 3px;
+    border-style: solid;
+    border-color: rgb(100, 100, 100);
+    /*border-radius: 15px;*/
+    font-size: 16px;
 }
 
-button:hover, select:hover {
-	border: 1px;
-	border-style: solid;
-	border-color: rgb(100, 100, 100);
-	/*border-radius: 15px;*/
-	cursor:	pointer;
+button:hover,
+select:hover {
+    border: 1px;
+    border-style: solid;
+    border-color: rgb(100, 100, 100);
+    /*border-radius: 15px;*/
+    cursor: pointer;
 }
 
 button:active {
-	border-color: red;
+    border-color: red;
 }
 
 #menu {
-	width: 340px;
-	height: 100vh;
-	background-color: rgb(245, 245, 245);
-	/*background-image: linear-gradient(to right, rgb(225, 226, 234), white);*/
-	color: #fff;
-	display: flex;
-	flex-direction: column; 
-	justify-content: flex-start;
-	align-items: center;
-	padding-top: 1rem;
-	position: absolute;
+    width: 340px;
+    height: 100vh;
+    background-color: rgb(245, 245, 245);
+    /*background-image: linear-gradient(to right, rgb(225, 226, 234), white);*/
+    color: #fff;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    align-items: center;
+    padding-top: 1rem;
+    position: absolute;
 }
 
 #canvas-container {
-	border: 0px;
-	border-style: solid;
-	border-color: rgb(120, 120, 120);
+    border: 0px;
+    border-style: solid;
+    border-color: rgb(120, 120, 120);
 }
 
 #item-select {
-	margin-top: 0px;
-	margin-bottom: 10px;
-	background-color: white;
-	width: 280px;
-	height: calc(100vh - 305px);
-	border: 0px;
-	border-style: solid;
-	border-color: rgb(120, 120, 120);
-	text-align: center;
-	padding: 15px;
-	overflow-x: hidden;
+    margin-top: 0px;
+    margin-bottom: 10px;
+    background-color: white;
+    width: 280px;
+    height: calc(100vh - 305px);
+    border: 0px;
+    border-style: solid;
+    border-color: rgb(120, 120, 120);
+    text-align: center;
+    padding: 15px;
+    overflow-x: hidden;
     overflow-y: auto;
 }
 
 .menuButtonWide {
-	width: 280px;
-	height: 40px;
-	margin-bottom: 10px;
+    width: 280px;
+    height: 40px;
+    margin-bottom: 10px;
 }
 
 .menu-text-input {
-	width: 280px;
-	height: 30px;
-	margin-bottom: 10px;
-	padding-left: 10px;
-	border: 3px;
-	border-style: solid;
-	border-color: rgb(100, 100, 100);
-	/*border-radius: 15px;*/
-	font-size: 16px;
+    width: 280px;
+    height: 30px;
+    margin-bottom: 10px;
+    padding-left: 10px;
+    border: 3px;
+    border-style: solid;
+    border-color: rgb(100, 100, 100);
+    /*border-radius: 15px;*/
+    font-size: 16px;
 }
 
 .with-margin {
-	margin-top: 10px;
+    margin-top: 10px;
 }
 
 .file-input {
-	color: black;
-	margin-bottom: 10px;
+    color: black;
+    margin-bottom: 10px;
 }
 
 .object-place {
-	width: 150px;
-	height: auto;
-	margin-top: 15px;
+    width: 150px;
+    height: auto;
+    margin-top: 15px;
 }
 
 .object-label {
-	margin-top: 0px;
-	margin-bottom: 25px;
-	font-family: Helvetica;
-	font-size: 16px;
+    margin-top: 0px;
+    margin-bottom: 25px;
+    font-family: Helvetica;
+    font-size: 16px;
 }
 
 .place-button {
-	margin-left: 40px;
-	margin-right: 40px;
-	text-align: center;
+    margin-left: 40px;
+    margin-right: 40px;
+    text-align: center;
 }
 
 .place-button:hover {
-	border: 1px;
-	border-style: solid;
-	margin-bottom: -1px;
-	margin-top: -1px;
+    border: 1px;
+    border-style: solid;
+    margin-bottom: -1px;
+    margin-top: -1px;
 }
 
 .tool-button {
-	width: 64px;
-	height: 64px;
+    width: 64px;
+    height: 64px;
 }
 
 .tool-button {
-	width: 60px;
-	height: 60px;
-	margin-bottom: 10px;
+    width: 60px;
+    height: 60px;
+    margin-bottom: 10px;
 }
 
 .logo {
-	width: 35px;
-	height: auto;
+    width: 35px;
+    height: auto;
+}
+
+.popover {
+    display: none;
+    z-index: 100;
+    position: absolute;
+    right: 0;
+    top: 0;
+    width: 400px;
 }
