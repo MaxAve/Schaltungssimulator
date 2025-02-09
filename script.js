@@ -14,6 +14,9 @@ let sketchName = 'Unbenannte Skizze'
 let cellSize = 20 // Used for the background grid
 
 let mouseDown = false
+
+let pinching = false;
+let dragStart = null
 let mouseX = 0;
 let mouseY = 0;
 let draggedObjectID = null
@@ -46,6 +49,15 @@ let bxnor = document.getElementById("bxnor")
 let bsch = document.getElementById("bsch")
 let bgb = document.getElementById("bgb")
 
+let zoomInBtn = document.getElementById("zoom-in-button")
+let zoomOutBtn = document.getElementById("zoom-out-button")
+let zoomToFitBtn = document.getElementById("zoom-to-fit-button")
+
+rainbowToggle.onclick = function() {
+    console.log('AI button clicked')
+    setScale(10);
+}
+
 const blockSize = { x: cellSize * 5, y: cellSize * 7 }
 let switchRadius = cellSize
 
@@ -54,6 +66,9 @@ const sketchOffset = { x: 0, y: 0 }
 // Used for rendering objects with scrolling and zoom offset
 function toScreenX(worldX) { return worldX + sketchOffset.x }
 function toScreenY(worldY) { return worldY + sketchOffset.y }
+
+function toWorldX(screenX) { return screenX - sketchOffset.x }
+function toWorldY(screenY) { return screenY - sketchOffset.y }
 
 const preDragMousePos = { x: 0, y: 0 }
 const dragDiff = { x: 0, y: 0 }
@@ -90,10 +105,21 @@ function setScale(scale) {
     blockSize.y = cellSize * 7
     switchRadius = cellSize
     for (let [id, obj] of objectMap) {
-        obj.size.x = blockSize.x
-        obj.size.y = blockSize.y
+        if (obj == undefined || obj.size == undefined) {
+            continue
+        }
+        if (obj.gateType == GateType.NOT) {
+            obj.size.x = blockSize.x
+            obj.size.y = blockSize.x
+        } else {
+            obj.size.x = blockSize.x ?? obj.size.x
+            obj.size.y = blockSize.y ?? obj.size.y
+        }
+
     }
 }
+
+
 
 // Canvas click menu
 class Menu {
@@ -225,6 +251,8 @@ const colorSchemes = {
         wireOnColor: 'rgb(252, 215, 27)',
         wireOffColor: 'black',
         menuBackground: 'rgba(245, 245, 245, 0.5)',
+        iconColor: 'black',
+        zoomButtonsBackground: 'rgba(245, 245, 245, 0.5)',
         menuTextColor: 'black',
         buttonColor: 'rgb(225, 225, 225)',
         borderColor: 'rgb(160, 160, 160)',
@@ -242,6 +270,8 @@ const colorSchemes = {
         wireOnColor: 'rgb(249, 247, 121)',
         wireOffColor: 'rgb(86, 45, 165)',
         menuBackground: 'rgba(30, 30, 30, 0.5)',
+        iconColor: 'white',
+        zoomButtonsBackground: 'rgba(30, 30, 30, 0.5)',
         menuTextColor: 'white',
         buttonColor: 'rgb(58, 58, 58)',
         borderColor: 'rgb(80, 80, 80)',
@@ -259,8 +289,10 @@ const colorSchemes = {
         wireOnColor: 'white',
         wireOffColor: 'rgb(60, 60, 60)',
         menuBackground: 'rgba(15, 15, 15, 0.5)',
+        iconColor: 'white',
         menuTextColor: 'white',
         buttonColor: 'rgb(50, 50, 50)',
+        zoomButtonsBackground: 'rgba(15, 15, 15, 0.5)',
         borderColor: 'rgb(80, 80, 80)',
     },
     chalkboard: {
@@ -276,6 +308,8 @@ const colorSchemes = {
         wireOnColor: 'yellow',
         wireOffColor: 'white',
         menuBackground: 'rgba(22, 30, 26, 0.5)',
+        iconColor: 'white',
+        zoomButtonsBackground: 'rgba(22, 30, 26, 0.5)',
         menuTextColor: 'white',
         buttonColor: 'rgb(52, 60, 56)',
         borderColor: 'rgb(80, 80, 80)',
@@ -392,53 +426,54 @@ const SWITCH = 2
 const LAMP = 3
 
 // Object presets
-const objectPresets = {
-    'wire': {
-        type: 0,
-        from: null,
-        to: null,
-        valIndex: 0,
-        inIndex: 0,
-        powered: false,
-    },
-    'block': {
-        type: 1,
-        label: null,
-        position: {
-            x: 0,
-            y: 0,
+const objectPresets = () => {
+    return {
+        'wire': {
+            type: 0,
+            from: null,
+            to: null,
+            valIndex: 0,
+            inIndex: 0,
+            powered: false,
         },
-        size: {
-            x: blockSize.x,
-            y: blockSize.y,
+        'block': {
+            type: 1,
+            label: null,
+            position: {
+                x: 0,
+                y: 0,
+            },
+            size: {
+                x: blockSize.x,
+                y: blockSize.y,
+            },
+            input: [false],
+            output: [],
+            operation: null,
+            invertsOutput: false,
+            isSquare: false,
+            gateType: null
         },
-        input: [false],
-        output: [],
-        operation: null,
-        invertsOutput: false,
-        isSquare: false,
-        gateType: null
-    },
-    'switch': {
-        type: 2,
-        label: 'E',
-        position: {
-            x: 0,
-            y: 0,
+        'switch': {
+            type: 2,
+            label: 'E',
+            position: {
+                x: 0,
+                y: 0,
+            },
+            powered: false,
         },
-        powered: false,
-    },
-    'lamp': {
-        type: 3,
-        label: 'A',
-        position: {
-            x: 0,
-            y: 0,
+        'lamp': {
+            type: 3,
+            label: 'A',
+            position: {
+                x: 0,
+                y: 0,
+            },
+            powered: false,
         },
-        powered: false,
-    },
+    }
 }
-
 const objectMap = new Map();
 
 function genID() {
@@ -447,7 +482,7 @@ function genID() {
 
 function createObject(type, id = null, label = null) {
     console.log(`Creating object of type ${type}`)
-    const obj = JSON.parse(JSON.stringify((objectPresets[type])))
+    const obj = JSON.parse(JSON.stringify((objectPresets()[type])))
     if (obj.type > 0) {
         obj.position.x = 400 - sketchOffset.x + Math.floor(Math.random() * 100 - 50)
         obj.position.y = canvas.height / 2 - sketchOffset.y + Math.floor(Math.random() * 100 - 50)
@@ -702,6 +737,33 @@ canvas.addEventListener('mousemove', (event) => {
     }*/
 });
 
+canvas.addEventListener('gesturestart', (e) => {
+    if (e.target === canvas) {
+        pinching = true;
+        dragStart = e.scale;
+    }
+});
+
+canvas.addEventListener('gesturechange', (e) => {
+    if (e.target === canvas) {
+        if (dragStart !== null && pinching) {
+            // Calculate the new scale based on the pinching gesture
+            let newScale = e.scale / dragStart;
+            let updatedScale = cellSize * newScale;
+            setScale(updatedScale);
+            dragStart = e.scale;
+        }
+    }
+    e.preventDefault();
+});
+
+canvas.addEventListener('gestureend', (e) => {
+    if (e.target === canvas) {
+        pinching = false;
+        dragStart = null;
+    }
+    e.preventDefault();
+});
 canvas.addEventListener("wheel", (e) => {
     // weird trackpad detection
     var isTrackpad = false;
@@ -713,6 +775,16 @@ canvas.addEventListener("wheel", (e) => {
     else if (e.deltaMode === 0) {
         isTrackpad = true;
     }
+
+    if (!isTrackpad) {
+        let delta = e.deltaY;
+        let updatedScale = cellSize * (1 - delta / 1000);
+        if (updatedScale > 0) {
+            setScale(updatedScale);
+        }
+    }
+
+    // Perform panning using the existing trackpad logic
     draggingSketch = true
     preDragMousePos.x = mouseX
     preDragMousePos.y = mouseY
@@ -1139,6 +1211,31 @@ uploadButton.addEventListener('change', () => {
 
 rainbowToggle.addEventListener("click", () => {
     rainbow = !rainbow
+})
+
+zoomInBtn.addEventListener("click", () => {
+    setScale(cellSize + 1)
+});
+
+zoomOutBtn.addEventListener("click", () => {
+    setScale(cellSize - 1)
+});
+
+zoomToFitBtn.addEventListener("click", () => {
+    let minX = 999999999
+    let maxX = -999999999
+    let minY = 999999999
+    let maxY = -999999999
+    for (let [key, obj] of objectMap) {
+        if (obj.position) {
+            minX = Math.min(minX, obj.position.x)
+            minY = Math.min(minY, obj.position.y)
+            maxX = Math.max(maxX, obj.position.x)
+            maxY = Math.max(maxY, obj.position.y)
+        }
+    }
+    sketchOffset.x = (MENU_WIDTH + 50) + (minX * -1)
+    sketchOffset.y = (canvas.height / 2) - ((minY + maxY) / 2);
 })
 
 bnot.addEventListener("click", () => {
@@ -1575,7 +1672,7 @@ function draw() {
     ctx.fillRect(0, 0, canvas.width, canvas.height)
 
     // Background lines
-    if (cellSize > 10) {
+    if (cellSize > 5) {
         ctx.strokeStyle = selectedColorScheme.lineColor
         if (selectedColorScheme.dotted) {
             for (let i = -2 * cellSize; i <= canvas.width + cellSize; i += cellSize) {
