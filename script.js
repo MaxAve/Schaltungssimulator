@@ -53,11 +53,6 @@ let zoomInBtn = document.getElementById("zoom-in-button")
 let zoomOutBtn = document.getElementById("zoom-out-button")
 let zoomToFitBtn = document.getElementById("zoom-to-fit-button")
 
-rainbowToggle.onclick = function() {
-    console.log('AI button clicked')
-    setScale(10);
-}
-
 const blockSize = { x: cellSize * 5, y: cellSize * 7 }
 let switchRadius = cellSize
 
@@ -776,13 +771,14 @@ canvas.addEventListener("wheel", (e) => {
         isTrackpad = true;
     }
 
-    if (!isTrackpad) {
+    // this dumbass breaks everything
+    /*if (!isTrackpad) {
         let delta = e.deltaY;
         let updatedScale = cellSize * (1 - delta / 1000);
         if (updatedScale > 0) {
             setScale(updatedScale);
         }
-    }
+    }*/
 
     // Perform panning using the existing trackpad logic
     draggingSketch = true

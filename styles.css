@@ -51,7 +51,7 @@ a {
 button,
 select {
     text-align: center;
-    border: 3px;
+    border: 1px;
     border-style: solid;
     border-color: rgb(100, 100, 100);
     /*border-radius: 15px;*/
@@ -60,7 +60,7 @@ select {
 
 button:hover,
 select:hover {
-    border: 1px;
+    border: 3px;
     border-style: solid;
     border-color: rgb(100, 100, 100);
     /*border-radius: 15px;*/
@@ -117,7 +117,7 @@ button:active {
     height: 30px;
     margin-bottom: 10px;
     padding-left: 10px;
-    border: 3px;
+    border: 1px;
     border-style: solid;
     border-color: rgb(100, 100, 100);
     /*border-radius: 15px;*/
