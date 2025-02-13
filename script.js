@@ -1672,7 +1672,7 @@ function draw() {
     ctx.fillRect(0, 0, canvas.width, canvas.height)
 
     // Background lines
-    if (cellSize > 5) {
+    if (cellSize > 13) {
         ctx.strokeStyle = selectedColorScheme.lineColor
         if (selectedColorScheme.dotted) {
             for (let i = -2 * cellSize; i <= canvas.width + cellSize; i += cellSize) {
